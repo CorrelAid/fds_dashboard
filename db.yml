@@ -1,0 +1,34 @@
+version: "3.9"
+services:
+  postgres:
+    container_name: postgres
+    image: fds-postgres
+    build: ./db/postgres/.
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - APP_DB_USER=api
+      - APP_DB_PASS=1234
+      - APP_DB_NAME=main
+    ports:
+      - 5432:5432
+    # wait till all scripts are done etc.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
+  redis:
+    container_name: redis
+    image: fds-redis
+    build: ./db/redis/.
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - '6379:6379'
+ 
+

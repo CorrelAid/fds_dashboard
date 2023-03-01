@@ -1,0 +1,26 @@
+.
+├── data
+│   └── foi_request_list.pbz2
+├── docker-compose.yml
+├── folder_structure.txt
+├── Postgres
+│   ├── Dockerfile
+│   ├── initial_data.csv
+│   ├── init.sh
+│   └── postgresql.conf
+├── python_scripts
+│   ├── helpercode
+│   │   ├── helpers.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── helpers.cpython-310.pyc
+│   │       └── __init__.cpython-310.pyc
+│   ├── initial_data_gen.py
+│   ├── initial_data_processing.py
+│   └── requirements.txt
+├── README.md
+└── Redis
+    ├── Dockerfile
+    └── redis.conf
+
+6 directories, 17 files
