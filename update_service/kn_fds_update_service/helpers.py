@@ -79,7 +79,11 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
                         for _entry in current_objects:
                                 
                                 sorting_val = _entry[sort_by]
+
+                                if isinstance(boundary, datetime):
+                                      sorting_val = convert_time_str(sorting_val)
                                 
+                                print(sorting_val.tzinfo)
                                 if sorting_val <= boundary:
                                         continue
                                 else:

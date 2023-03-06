@@ -1,4 +1,4 @@
-from celery import Celery
+#from celery import Celery
 from rich.console import Console
 from sqlalchemy import create_engine,MetaData
 #from sqlalchemy.ext.declarative import declarative_base
@@ -19,12 +19,10 @@ cols_messages = ["id", "request", "sent", "is_response", "is_postal", "kind", "s
 cols_pbodies = ["id", "name", "classification", "categories", "address", "jurisdiction", ]
 
 
-celery=Celery('update-service',
-            broker='', #insert broker 
-            backend='') #insert backend
+#celery=Celery('update-service',broker='', #insert broker backend='') #insert backend
 
-adjusted_config = 'kn_fds_update_service.celeryconfig'
-celery.config_from_object(adjusted_config)
+#adjusted_config = 'kn_fds_update_service.celeryconfig'
+#celery.config_from_object(adjusted_config)
 
 #@celery.on_after_configue.connect
 def setup_periodic_task():
@@ -55,9 +53,9 @@ def get_boundaries(db):
     LIMIT 1
     '''
 
-    last_message=db.execute(text(query_foi_requests)).one()
-    last_timestamp=db.execute(text(query_messages)).one()
-    last_id = db.execute(text(query_bodies)).one()
+    last_message=db.execute(text(query_foi_requests)).scalar()
+    last_timestamp=db.execute(text(query_messages)).scalar()
+    last_id = db.execute(text(query_bodies)).scalar()
     return last_message, last_timestamp, last_id
     #pass
 
@@ -92,7 +90,7 @@ def get_values():
 
 def update_entries():
     # first session: get latest data (message, timestamp, id)
-    session = SessionLocal
+    session = SessionLocal()
     try:
         last_mess, last_times, last_id = get_boundaries(session)
     finally:
@@ -104,7 +102,7 @@ def update_entries():
     df_foi, df_pb, df_class, df_cat, df_jur, df_mes = get_values()
     
     # second session: upsert data
-    session2 = SessionLocal
+    session2 = SessionLocal()
     try:
         # general plan: 
         #   create temp table
@@ -158,5 +156,12 @@ def update_entries():
         session2.close()
         print("Session2 closed.")
 
+# TESTING
 
+session = SessionLocal()
+try:
+    last_mess, last_times, last_id = get_boundaries(session)
+finally:
+    session.close()
 
+get_entries(last_mess, last_times, last_id)
