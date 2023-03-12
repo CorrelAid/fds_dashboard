@@ -50,13 +50,21 @@ def group_by_count(db, table, column):
     result = [tuple(row) for row in result]
     return result
 
+def requests_by_month(db, table, column):
+    stmt = select(func.date_trunc("month", column), func.count(table.id))\
+    .group_by(func.date_trunc("month", column))\
+    .order_by(func.date_trunc("month", column))
+    result = db.execute(stmt).fetchall()
+    result = [tuple(row) for row in result]
+    return result
+
  
 def query_total_stats(db):
     return {"total_foi_requests": db.query(FoiRequest).count(),
             "total_users": sql_query(db, sql_total_users).scalar(),
             "total_dist_resolution": group_by_count(db, FoiRequest, FoiRequest.resolution),
             "total_dist_status": group_by_count(db, FoiRequest, FoiRequest.status),
-            "total_requests_by_month": sql_to_dict(db, sql_total_requests_month, time_key=True)}
+            "total_requests_by_month": requests_by_month(db, FoiRequest, FoiRequest.first_message)}
 
 
 def query_general_info(db):

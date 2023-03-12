@@ -3,13 +3,6 @@ SELECT COUNT(DISTINCT user_id)
 FROM foi_requests;
 '''
 
-sql_total_requests_month = '''
-SELECT DATE_TRUNC('month', first_message) AS request_to_month, Count(id) as count
-FROM foi_requests
-GROUP BY DATE_TRUNC('month', first_message)
-Order BY DATE_TRUNC('month', first_message)
-'''
-
 sql_jurisdictions = '''
 SELECT id, name
 FROM jurisdictions;
