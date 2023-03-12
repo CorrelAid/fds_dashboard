@@ -5,8 +5,6 @@ import os
 REDIS_ADR = os.environ.get("REDIS_ADR")
 REDIS_PORT = os.environ.get("REDIS_PORT")
 
-print(REDIS_ADR)
-
 r = redis.Redis(host=REDIS_ADR, port=REDIS_PORT, db=0)
 
 def cache_handler(db, key, query_function):
