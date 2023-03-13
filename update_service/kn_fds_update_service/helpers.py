@@ -6,6 +6,7 @@ import requests
 from sys import exit
 import math
 import pandas as pd
+import pytz
 
 def convert_time_str(str):
      # time string format varies. sometimes with miliseconds, sometimes without
@@ -73,21 +74,33 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
                         updated_total = res.json()["meta"]["total_count"]
 
                         #all_objects += res.json()["objects"]
-
+                        #current_objects = []
                         current_objects = res.json()["objects"]
+                        #print(current_objects)
 
                         for _entry in current_objects:
                                 
+                                #print(_entry)
                                 sorting_val = _entry[sort_by]
 
                                 if isinstance(boundary, datetime):
                                       sorting_val = convert_time_str(sorting_val)
+
+                                      boundary_tzi = pytz.utc.localize(boundary)
+
+                                      if sorting_val <= boundary_tzi:
+                                            continue
+                                      else:
+                                            new_objects.append(_entry)
+                                            #print("New entry found")
                                 
-                                print(sorting_val.tzinfo)
-                                if sorting_val <= boundary:
-                                        continue
-                                else:
-                                        new_objects+=_entry
+                                else: 
+                                      if sorting_val <= boundary:
+                                            continue
+                                      else: 
+                                            new_objects.append(_entry)
+                                            #print("New object founds")
+         
 
                         adjustment = updated_total - current_total
                         
@@ -128,6 +141,9 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
                         console.print("Decreasing offset")
                         offset -= 50 
                 
+                #print(len(new_objects))
+                #print(new_objects)
+                #break
 
         console.print(f"Number of downloaded items: {len(new_objects)}. FDS has {current_total} items in its database.")
 
@@ -135,8 +151,11 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
                 
                 df = pd.DataFrame(new_objects)
                 # sorting to be able to update based on last message in separate script
-                console.print("Sorting...")
-                df.sort_values(by=sort_by, ascending=False, inplace=True)
+                #console.print("Sorting...")
+                
+                print(df.columns)
+                # not necessary
+                # df.sort_values(by=sort_by, ascending=False, inplace=True)
 
                 # with Status("Converting last_message to datetime...") as status:
                 #         df["last_message"] = pd.to_datetime(df.last_message)
