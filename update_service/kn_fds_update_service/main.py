@@ -5,16 +5,19 @@ from sqlalchemy import create_engine,MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import TIMESTAMP
+#from sqlalchemy.sql.expression import insert
+from sqlalchemy import insert 
 from helpers import dload_update
 from pp_update import pp_requests, pp_messages, pp_pb
 from queries import *
 from database import SessionLocal,engine,metadata
+from models import FoiRequest, Jurisdiction, Message, PublicBody
 import os 
 import pandas as pd
 
 console=Console()
 
-cols_foi_requests = ["id", "jurisdiction", "refusal_reason", "costs", "due_date", "resolved_on", "first_message", "last_message", "status", "resolution", "user", "public_body"]
+cols_foi_requests = ["id", "jurisdiction", "refusal_reason", "costs", "due_date", "resolved_on", "created_at", "last_message", "status", "resolution", "user", "public_body"]
 cols_messages = ["id", "request", "sent", "is_response", "is_postal", "kind", "sender_public_body", "recipient_public_body", "status", "timestamp"]
 cols_pbodies = ["id", "name", "classification", "categories", "address", "jurisdiction", ]
 
@@ -76,12 +79,12 @@ def preprocessing():
 
 def get_values():
     
-    df_foi_requests = pd.read_csv('data/foi_requests.csv')
-    df_public_bodies = pd.read_csv('data/update_public_bodies.csv')
-    df_classifications = pd.read_csv('data/update_classifications.csv')
-    df_categories = pd.read_csv('data/update_categories.csv')
-    df_jurisdiction = pd.read_csv('data/update_jurisdictions.csv')
-    df_messages = pd.read_csv('data/update_messages.csv')
+    df_foi_requests = pd.read_csv("../data/update_foi_requests.csv")
+    df_public_bodies = pd.read_csv("../data/update_public_bodies.csv")
+    df_classifications = pd.read_csv("../data/update_classifications.csv")
+    df_categories = pd.read_csv("../data/update_categories.csv")
+    df_jurisdiction = pd.read_csv("../data/update_jurisdictions.csv")
+    df_messages = pd.read_csv("../data/update_messages.csv")
 
     return df_foi_requests, df_public_bodies, df_classifications, df_categories, df_jurisdiction, df_messages
 
@@ -158,6 +161,100 @@ def update_entries():
 
 # TESTING
 
+# Upsert new data into db
+
+df_foi, df_pb, df_class, df_cat, df_jur, df_mes = get_values()
+
+metadata.create_all(engine)
+df_jur.to_sql(con=engine, name=Jurisdiction.__tablename__, if_exists='replace', index=False)
+
+'''
+df_foi, df_pb, df_class, df_cat, df_jur, df_mes = get_values()
+with engine.begin() as con:
+    con.execute(text(create_tmp_jurisdictions))
+    console.print("Tmp table created")
+    #con.execute(text("""INSERT INTO tmp_jurisdictions (id, name, rank) VALUES (%s, %s, %s)"""), df_jur.to_dict('records'))
+    con.execute(text("""INSERT INTO tmp_jurisdictions (id, name, rank) VALUES (%s, %s, %s)"""), [(999, "JJ", 77)])
+    console.print("Data inserted to tmp table")
+    #con.execute(text(merge_jurisdiction))
+    #console.print("data merged")
+    #con.execute(text(delete_tmp_jurisdictions))
+    #console.print("Tmp table deleted")
+    
+'''
+
+'''
+session2 = SessionLocal()
+try:
+    # general plan: 
+    #   create temp table
+    #   insert values into temp table
+    #   merge with target table
+    #   delete temp table
+
+    session2.execute(text(create_tmp_jurisdictions))
+    console.print("Temporary table 'tmp_jurisdictions' created")
+    session2.execute(insert(tmp_jurisdictions), df_jur.to_dict('records'))
+    console.print("Data upserted to temporary table")
+    session2.execute(text(merge_jurisdiction))
+    console.print("Data merged")
+    session2.execute(text(delete_tmp_jurisdictions))
+    console.print("Temporary table deleted")
+
+    session2.execute(text(create_tmp_public_bodies))
+    console.print("Temporary table 'tmp_public_bodies' created")
+    session2.execute(text(upsert_tmp_public_bodies), df_pb.values.tolist())
+    console.print("Data upserted to temporary table")
+    session2.execute(text(merge_public_bodies))
+    console.print("Data merged")
+    session2.execute(text(delete_tmp_public_bodies))
+    console.print("Temporary table deleted")
+
+    session2.execute(text(create_tmp_foi_requests))
+    console.print("Temporary table 'tmp_foi_requests' created")
+    session2.execute(text(upsert_tmp_foi_requests), df_foi.values.tolist())
+    console.print("Data upserted to temporary table")
+    session2.execute(text(merge_foi_requests))
+    console.print("Data merged")
+    session2.execute(text(delete_tmp_foi_requests))
+    console.print("Temporary table deleted")
+
+    session2.execute(text(create_tmp_messages))
+    console.print("Temporary table 'tmp_messages' created")
+    session2.execute(text(upsert_tmp_messages), df_mes.values.tolist())
+    console.print("Data upserted to temporary table")
+    session2.execute(text(merge_messages))
+    console.print("Data merged")
+    session2.execute(text(delete_tmp_messages))
+    console.print("Temporary table deleted")
+
+
+    
+
+
+    
+
+finally:
+    session2.close()
+    console.print("Session2 closed.")
+
+'''
+# Preprocessing and df load
+
+'''
+preprocessing()
+df_foi, df_pb, df_class, df_cat, df_jur, df_mes = get_values()
+console.print(f"Number of rows in df_foi: {len(df_foi.index)}")
+console.print(f"Number of rows in df_pb: {len(df_pb.index)}")
+console.print(f"Number of rows in df_class: {len(df_class.index)}")
+console.print(f"Number of rows in df_cat: {len(df_cat.index)}")
+console.print(f"Number of rows in df_jur: {len(df_jur.index)}")
+console.print(f"Number of rows in df_mes: {len(df_mes.index)}")
+'''
+
+
+# Boundary retrival and API request
+'''
 session = SessionLocal()
 try:
     last_mess, last_times, last_id = get_boundaries(session)
@@ -165,3 +262,4 @@ finally:
     session.close()
 
 get_entries(last_mess, last_times, last_id)
+'''
