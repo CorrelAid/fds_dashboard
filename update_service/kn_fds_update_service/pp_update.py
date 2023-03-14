@@ -11,6 +11,8 @@ def pp_requests():
 
     df = pd.DataFrame(data)
 
+    df.sort_values(by="last_message", ascending=False, inplace=True) # temporary sorting for testing
+    
     # Keeping first because we want the most recently updated foi requests (df is sorted by last message)
     df.drop_duplicates(subset="id", inplace=True, keep="first")
 
@@ -33,6 +35,8 @@ def pp_pb():
 
     df = pd.DataFrame(data)
     
+    df.sort_values(by="id", ascending=False, inplace=True) # temporary sorting for testing
+
     # remove duplicates
     df.drop_duplicates(subset="id", inplace=True, keep="first")
 
@@ -66,7 +70,12 @@ def pp_pb():
     # remove duplicates
     juris = []
     [juris.append(x) for x in juri if x not in juris and not None]
-    juris.remove(None)
+    
+    while None in juris:
+        # removing None from list using remove method
+        juris.remove(None)
+    
+    #juris.remove(None)
 
     # convert to df and remove useless columns
     jurisdiction=pd.DataFrame.from_dict((juris))
@@ -105,6 +114,8 @@ def pp_messages():
         data = decompress_pickle("../data/update_messages.pbz2")
 
     df = pd.DataFrame(data)
+
+    df.sort_values(by="timestamp", ascending=False, inplace=True) # temporary sorting for testing
 
     # keep useful columns
     # df = df[["id", "request", "sent", "is_response", "is_postal", "kind", "sender_public_body", "recipient_public_body", "status", "timestamp"]]
