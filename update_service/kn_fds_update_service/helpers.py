@@ -151,11 +151,8 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
                 
                 df = pd.DataFrame(new_objects)
                 # sorting to be able to update based on last message in separate script
-                #console.print("Sorting...")
-                
-                print(df.columns)
-                # not necessary
-                # df.sort_values(by=sort_by, ascending=False, inplace=True)
+                console.print("Sorting...")
+                df.sort_values(by=sort_by, ascending=False, inplace=True)
 
                 # with Status("Converting last_message to datetime...") as status:
                 #         df["last_message"] = pd.to_datetime(df.last_message)
@@ -167,5 +164,5 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
                 compressed_pickle(f"../data/update_{type}.pbz2", df)
 
         else: 
-                print("No new entries found.")
+                console.print("No new entries found.")
                 pass
