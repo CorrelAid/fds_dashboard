@@ -7,6 +7,10 @@ from sys import exit
 import math
 import pandas as pd
 import pytz
+from sqlalchemy import text
+from rich.console import Console
+from pp_update import pp_requests, pp_messages, pp_pb
+import pandas as pd
 
 def convert_time_str(str):
      # time string format varies. sometimes with miliseconds, sometimes without
@@ -18,6 +22,65 @@ def convert_time_str(str):
 
 def get_item(collection, key, target):
      return next((item for item in collection if item[key] == target), None)
+
+##########################################################################################################
+# HELPER FUNCTIONS FOR UPDATE
+
+def get_boundaries(db):
+    # Query for latest date
+    query_foi_requests = f'''
+    SELECT last_message 
+    FROM foi_requests 
+    ORDER BY last_message DESC
+    LIMIT 1
+    '''
+    #Query for messages
+    query_messages = f'''
+    SELECT timestamp
+    FROM messages
+    ORDER BY timestamp DESC
+    LIMIT 1
+    '''
+    # Query for public bodies
+    query_bodies = f'''
+    SELECT id 
+    FROM public_bodies
+    ORDER BY id DESC
+    LIMIT 1
+    '''
+
+    last_message=db.execute(text(query_foi_requests)).scalar()
+    last_timestamp=db.execute(text(query_messages)).scalar()
+    last_id = db.execute(text(query_bodies)).scalar()
+    return last_message, last_timestamp, last_id
+
+def get_entries(cols_foi_requests, cols_messages, cols_pbodies, latest_message, latest_timestamp, latest_id, console):
+    # call update function from helpers.py
+    new_foi = dload_update("https://fragdenstaat.de/api/v1/request/", "foi_requests", "last_message", cols_foi_requests, latest_message, console)
+    new_mess = dload_update("https://fragdenstaat.de/api/v1/message/", "messages", "timestamp", cols_messages, latest_timestamp, console)
+    new_pbodies = dload_update("https://fragdenstaat.de/api/v1/publicbody/", "public_bodies", "id", cols_pbodies, latest_id, console)
+    return new_foi, new_mess, new_pbodies
+
+def preprocessing(console):
+    console.print("preprocessing requests...")
+    pp_requests()
+    console.print("preprocessing messages...")
+    pp_messages()
+    console.print("preprocessing public_bodies...")
+    pp_pb()
+
+def get_values():
+    
+    df_foi_requests = pd.read_csv("../data/update_foi_requests.csv")
+    df_public_bodies = pd.read_csv("../data/update_public_bodies.csv")
+    df_classifications = pd.read_csv("../data/update_classifications.csv")
+    df_categories = pd.read_csv("../data/update_categories.csv")
+    df_jurisdiction = pd.read_csv("../data/update_jurisdictions.csv")
+    df_messages = pd.read_csv("../data/update_messages.csv")
+
+    return df_foi_requests, df_public_bodies, df_classifications, df_categories, df_jurisdiction, df_messages
+
+########################################################################################################## 
 
 ##### Based on https://betterprogramming.pub/load-fast-load-big-with-compressed-pickles-5f311584507e #####
 
@@ -163,6 +226,9 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
         
                 compressed_pickle(f"../data/update_{type}.pbz2", df)
 
+                return True
+
         else: 
                 console.print("No new entries found.")
-                pass
+                
+                return False
