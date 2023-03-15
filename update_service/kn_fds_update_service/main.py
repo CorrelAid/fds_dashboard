@@ -7,6 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 #from sqlalchemy.sql.expression import insert
 from sqlalchemy import insert 
+import psycopg2
 from helpers import dload_update
 from pp_update import pp_requests, pp_messages, pp_pb
 from queries import *
@@ -14,6 +15,8 @@ from database import SessionLocal,engine,metadata
 from models import FoiRequest, Jurisdiction, Message, PublicBody
 import os 
 import pandas as pd
+import numpy as np
+from sqlalchemy.exc import SQLAlchemyError
 
 console=Console()
 
@@ -159,15 +162,167 @@ def update_entries():
         session2.close()
         print("Session2 closed.")
 
+
+
 # TESTING
 
 # Upsert new data into db
 
+
+
+def upload_jur(df, console):
+    sess = SessionLocal()
+    sess.execute(text(create_tmp_jurisdictions))
+    console.print("tmp table created")
+    try:
+        data = df.to_numpy().tolist()
+        for i in data:
+            record = Jurisdiction(**{
+                "id": i[0],
+                "name": i[1],
+                "rank": i[2]
+            })
+            sess.add(record)
+
+        sess.commit()
+        console.print("Committed.")
+    except SQLAlchemyError as e:
+        sess.rollback()
+        console.print("Rollback.")
+        error = str(e.__dict__['orig'])
+        console.print(error)
+    
+    finally:
+        sess.close()
+        console.print("Session closed.")
+
+def upload_foi(df, console):
+    sess = SessionLocal()
+    sess.execute(text(create_tmp_foi_requests))
+    console.print("Temporary table created")
+    try:
+        data = df.to_numpy().tolist()
+        for i in data:
+            record = FoiRequest(**{
+                "id": i[0],
+                "jurisdiction": i[1],
+                "refusal_reason": i[2],
+                "costs": i[3],
+                "due_date": i[4],
+                "resolved_on": i[5],
+                "created_at": i[6],
+                "last_message": i[7],
+                "status": i[8],
+                "resolution": i[9],
+                "user": i[10],
+                "public_body_id": i[11]
+            })
+            sess.add(record)
+        
+        sess.commit()
+        console.print("Committed.")
+    except SQLAlchemyError as e:
+        sess.rollback()
+        console.print("Rollback.")
+        error = str(e.__dict__['orig'])
+        console.print(error)
+
+    finally:
+        sess.close()
+        console.print("Session closed.")
+
+def upload_message(df, console):
+    sess = SessionLocal()
+    sess.execute(text(create_tmp_messages))
+    console.print("Temporary table created.")
+    try:
+        data = df.to_numpy().tolist()
+        for i in data:
+            record = Message(**{
+                "id": i[0],
+                "request": i[1],
+                "sent": i[2],
+                "is_response": i[3],
+                "is_postal": i[4],
+                "kind": i[5],
+                "sender_public_body": i[6],
+                "recipient_public_body": i[7],
+                "status": i[8],
+                "timestamp": i[9]
+            })
+            sess.add(record)
+
+        sess.commit()
+        console.print("Committed.")
+    except SQLAlchemyError as e:
+        sess.rollback()
+        console.print("Rollback.")
+        error = str(e.__dict__['orig'])
+        console.print(error)
+
+    finally:
+        sess.close()
+        console.print("Session closed.")
+
+def upload_pb(df, console):
+    sess = SessionLocal()
+    sess.execute(text(create_tmp_public_bodies))
+    console.print("Temporary table created.")
+    try:
+        data = df.to_numpy().tolist()
+        for i in data:
+            record = PublicBody(**{
+                "id": i[0],
+                "name": i[1],
+                "classification": i[2],
+                "categories": i[3],
+                "address": i[4],
+                "jurisdiction": i[5]
+            })
+            sess.add(record)
+
+        sess.commit()
+        console.print("Committed.")
+
+    except SQLAlchemyError as e:
+        sess.rollback()
+        console.print("Rollback.")
+        error = str(e.__dict__['orig'])
+        console.print(error)
+
+    finally:
+        sess.close()
+        console.print("Session closed.")
+
+df_foi, df_pb, df_class, df_cat, df_jur, df_mes = get_values()
+#metadata.create_all(engine)
+upload_jur(df_jur, console=console)
+        
+
+
+
+'''
+df_foi, df_pb, df_class, df_cat, df_jur, df_mes = get_values()
+#metadata.create_all(engine)
+#jurtest = df_to_np_arr("../data/update_jurisdictions.csv")
+jurtest = df_jur.to_numpy().tolist()
+for i in jurtest:
+    record = Jurisdiction(**{
+        'id': i[0],
+        'name': i[1],
+        'rank': i[2]
+    })
+    console.print(record.id)
+#console.print(jurtest)
+'''
+
+
+'''
 df_foi, df_pb, df_class, df_cat, df_jur, df_mes = get_values()
 
 metadata.create_all(engine)
 df_jur.to_sql(con=engine, name=Jurisdiction.__tablename__, if_exists='replace', index=False)
-
+'''
 '''
 df_foi, df_pb, df_class, df_cat, df_jur, df_mes = get_values()
 with engine.begin() as con:
