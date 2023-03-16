@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from kn_fds_statistics_api.models import FoiRequest
-from kn_fds_statistics_api.query_text import *
+from models import FoiRequest
+from query_text import *
 from sqlalchemy import select, text
 from datetime import datetime
 

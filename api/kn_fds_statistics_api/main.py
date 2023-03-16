@@ -6,12 +6,12 @@ import sqlalchemy
 from fastapi import FastAPI, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-import kn_fds_statistics_api.models 
-from kn_fds_statistics_api.schemas import TotalStats, GeneralInfo, Ranking
-from kn_fds_statistics_api.database import SessionLocal,engine,metadata
-from kn_fds_statistics_api.helpers import generate_model
-from kn_fds_statistics_api.queries import query_general_info, query_total_stats, query_general_info, query_ranking
-from kn_fds_statistics_api.cache import cache_handler
+import models 
+from schemas import TotalStats, GeneralInfo, Ranking
+from database import SessionLocal,engine,metadata
+from helpers import generate_model
+from queries import query_general_info, query_total_stats, query_general_info, query_ranking
+from cache import cache_handler
 
 
 app = FastAPI(title="FDS Statistics API")
@@ -45,8 +45,8 @@ def root(db: Session = Depends(get_db)):
     return cache_handler(db, "ranking", query_ranking)
 
 
-def start():
-    """Launched with `poetry run start` at root level"""
-    # Generating sqlalchemy model 
-    generate_model(engine=engine, metadata=metadata, outfile='kn_fds_statistics_api/models.py') 
-    uvicorn.run("kn_fds_statistics_api.main:app", host="0.0.0.0", port=8000, reload=True)
+# def start():
+#     """Launched with `poetry run start` at root level"""
+#     # Generating sqlalchemy model 
+#     generate_model(engine=engine, metadata=metadata, outfile='kn_fds_statistics_api/models.py') 
+#     uvicorn.run("kn_fds_statistics_api.main:app", host="0.0.0.0", port=8000, reload=True)
