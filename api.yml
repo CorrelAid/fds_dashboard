@@ -36,14 +36,12 @@ services:
       - db
   
   api:
+    restart: on-failure
     container_name: fds-api
     image: fds-api
     build: ./api/.
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis: 
-        condition: service_healthy
+      - postgres
     environment:
       POSTGRES_URL: postgresql://api:1234@postgres:5432/main
       REDIS_ADR: redis
