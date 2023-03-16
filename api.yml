@@ -36,6 +36,7 @@ services:
       - db
   
   api:
+    restart: on-failure
     container_name: fds-api
     image: fds-api
     build: ./api/.
