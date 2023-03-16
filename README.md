@@ -14,8 +14,13 @@ docker compose -f db.yml  up --force-recreate -d
 python -m venv venv
 source bin/activate
 ```
-
-3. Run the project (while in api/api folder):
+3. Go to api/api folder. Create the file .env:
+```
+POSTGRES_URL='postgresql://api:1234@localhost:5432/main' 
+REDIS_ADR='localhost' 
+REDIS_PORT=6379
+```
+4.. Run the project (while in api/api folder):
 ```
 uvicorn main:app --reload 
 ```

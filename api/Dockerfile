@@ -1,21 +1,13 @@
-FROM python:3.10.4-slim-buster
+FROM python:3.9
 
-ENV PYTHONDONTWRITEBYTECODE 1 \
-    PYTHONUNBUFFERED 1
+WORKDIR /code
 
-RUN apt-get update \
-    && apt-get install curl libpq-dev python3-dev gcc -y \
-    && curl -sSL https://install.python-poetry.org | python - --version 1.1.13
+COPY ./requirements.txt /code/requirements.txt
 
-ENV PATH="/root/.local/bin:$PATH"
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-WORKDIR /usr/app
+COPY ./api /code/app
 
-COPY pyproject.toml poetry.lock ./
+WORKDIR /code/app
 
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev --no-interaction --no-ansi
-
-COPY ./ ./
-
-CMD [ "poetry", "run", "start" ]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
