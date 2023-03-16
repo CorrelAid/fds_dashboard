@@ -9,14 +9,15 @@ docker compose -f db.yml down --volumes
 docker compose -f db.yml build --no-cache 
 docker compose -f db.yml  up --force-recreate -d
 ```
-2. Go to api folder. If you havent already, install packages. You need poetry for this to work: https://python-poetry.org/docs/
+2. Go to api folder. If you havent already, create env and install packages. For example with linux:
 ```
-poetry install
+python -m venv venv
+source bin/activate
 ```
 
-3. Run the project (while in api folder):
+3. Run the project (while in api/api folder):
 ```
-poetry run start
+uvicorn main:app --reload 
 ```
 
 ### Working on frontend
