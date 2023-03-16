@@ -11,7 +11,7 @@ services:
       - APP_DB_PASS=1234
       - APP_DB_NAME=main
     ports:
-      - 5432:5432
+      - 5435:5432
     # wait till all scripts are done etc.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
