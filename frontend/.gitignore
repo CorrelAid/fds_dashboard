@@ -25,7 +25,7 @@ dist-ssr
 
 .vscode
 
-#part of build
-static/fonts/
-static/css/fds/
-static/js/d3/
+# #part of build
+# static/fonts/
+# static/css/fds/
+# static/js/d3/
