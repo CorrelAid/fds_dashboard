@@ -1,8 +1,3 @@
-sql_total_users = '''
-SELECT COUNT(DISTINCT user_id)
-FROM foi_requests;
-'''
-
 sql_jurisdictions = '''
 SELECT id, name
 FROM jurisdictions;
