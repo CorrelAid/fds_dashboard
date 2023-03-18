@@ -66,7 +66,7 @@ def upload_foi(df, console):
                 "last_message": i[7],
                 "status": i[8],
                 "resolution": i[9],
-                "user": i[10],
+                "user_id": i[10],
                 "public_body_id": i[11]
             })
             sess.add(record)

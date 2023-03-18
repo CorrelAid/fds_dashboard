@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import TIMESTAMP
 #from sqlalchemy.sql.expression import insert
 from sqlalchemy import insert 
 import psycopg2
-from helpers import get_boundaries, get_entries, preprocessing, get_values
+from helpers import get_boundaries, get_entries#, preprocessing, get_values
 from pp_update import pp_requests, pp_messages, pp_pb
 from queries import *
 from database import SessionLocal,engine,metadata
@@ -18,6 +18,7 @@ import os
 import pandas as pd
 import numpy as np
 from sqlalchemy.exc import SQLAlchemyError
+from time import time
 
 console=Console()
 
@@ -40,7 +41,7 @@ def setup_periodic_task():
 
 
 
-def update_entries(console):
+def update_entries(cols_foi_requests, cols_messages, cols_pbodies, console):
     # get latest data (message, timestamp, id)
     session = SessionLocal()
     try:
@@ -49,27 +50,27 @@ def update_entries(console):
         session.close()
     
     # collect new data in .pbz2 files if exists, returns bool indicating if so
-    new_foi_request, new_message, new_public_body = get_entries(last_mess, last_times, last_id)
+    new_foi_request, new_message, new_public_body = get_entries(cols_foi_requests, cols_messages, cols_pbodies, last_mess, last_times, last_id, console)
     
     # if new data found, start preprocessing and upload
     # preprocessing: storing data in csvs
 
     if new_foi_request:
-        console.print("preprocessing requests...")
+        console.print("Preprocessing requests...")
         pp_requests()
 
         df_foi_requests = pd.read_csv("../data/update_foi_requests.csv")
         upload_foi(df_foi_requests, console=console)
         
     if new_message:
-        console.print("preprocessing messages...")
+        console.print("Preprocessing messages...")
         pp_messages()
 
         df_messages = pd.read_csv("../data/update_messages.csv")
         upload_message(df_messages, console=console)
 
     if new_public_body:
-        console.print("preprocessing public_bodies...")
+        console.print("Preprocessing public_bodies...")
         pp_pb()
 
         df_public_bodies = pd.read_csv("../data/update_public_bodies.csv")
@@ -105,6 +106,15 @@ def update_entries(console):
 
 
 # TESTING
+
+# Overall process test run
+
+t = time()
+update_entries(cols_foi_requests, cols_messages, cols_pbodies, console=console)
+t2= time()
+console.print("Time taken for whole process: {}".format((t2-t)//3600))
+#console.print("Time taken for whole process: {}".format(t2-t))
+
 
 # Upsert new data into db
 
