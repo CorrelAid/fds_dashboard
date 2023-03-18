@@ -11,7 +11,7 @@ def pp_requests():
 
     df = pd.DataFrame(data)
 
-    df.sort_values(by="last_message", ascending=False, inplace=True) # temporary sorting for testing
+    #df.sort_values(by="last_message", ascending=False, inplace=True) # temporary sorting for testing
     
     # Keeping first because we want the most recently updated foi requests (df is sorted by last message)
     df.drop_duplicates(subset="id", inplace=True, keep="first")
@@ -35,7 +35,7 @@ def pp_pb():
 
     df = pd.DataFrame(data)
     
-    df.sort_values(by="id", ascending=False, inplace=True) # temporary sorting for testing
+    #df.sort_values(by="id", ascending=False, inplace=True) # temporary sorting for testing
 
     # remove duplicates
     df.drop_duplicates(subset="id", inplace=True, keep="first")
@@ -115,7 +115,7 @@ def pp_messages():
 
     df = pd.DataFrame(data)
 
-    df.sort_values(by="timestamp", ascending=False, inplace=True) # temporary sorting for testing
+    #df.sort_values(by="timestamp", ascending=False, inplace=True) # temporary sorting for testing
 
     # keep useful columns
     # df = df[["id", "request", "sent", "is_response", "is_postal", "kind", "sender_public_body", "recipient_public_body", "status", "timestamp"]]
