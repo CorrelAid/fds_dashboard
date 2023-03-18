@@ -9,7 +9,7 @@ import pandas as pd
 import pytz
 from sqlalchemy import text
 from rich.console import Console
-from pp_update import pp_requests, pp_messages, pp_pb
+#from pp_update import pp_requests, pp_messages, pp_pb
 import pandas as pd
 
 def convert_time_str(str):
@@ -61,6 +61,7 @@ def get_entries(cols_foi_requests, cols_messages, cols_pbodies, latest_message, 
     new_pbodies = dload_update("https://fragdenstaat.de/api/v1/publicbody/", "public_bodies", "id", cols_pbodies, latest_id, console)
     return new_foi, new_mess, new_pbodies
 
+'''
 def preprocessing(console):
     console.print("preprocessing requests...")
     pp_requests()
@@ -68,6 +69,7 @@ def preprocessing(console):
     pp_messages()
     console.print("preprocessing public_bodies...")
     pp_pb()
+'''
 
 def get_values():
     

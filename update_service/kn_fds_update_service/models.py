@@ -16,7 +16,7 @@ class FoiRequest(Base):
     costs = Column(Numeric)
     due_date = Column(TIMESTAMP(precision=6))
     resolved_on = Column(TIMESTAMP(precision=6))
-    first_message = Column(TIMESTAMP(precision=6))
+    created_at = Column(TIMESTAMP(precision=6))
     last_message = Column(TIMESTAMP(precision=6))
     status = Column(String(26))
     resolution = Column(String(26))
