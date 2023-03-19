@@ -151,6 +151,7 @@ def upload_pb(df, console):
                 "jurisdiction": i[5]
             })
             sess.add(record)
+            console.print("Record added.")
 
         sess.commit()
         console.print("Committed.")

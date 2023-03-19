@@ -29,13 +29,13 @@ WHEN MATCHED THEN UPDATE SET name=Source.name, classification=Source.classificat
 
 merge_foi_requests = """
 MERGE INTO foi_requests AS Target USING tmp_foi_requests AS Source ON Target.id=Source.id
-WHEN NOT MATCHED THEN INSERT VALUES (Source.id, Source.jurisdiction, Source.refusal_reason, Source.costs, Source.due_date, Source.resolved_on, Source.first_message, Source.last_message, Source.status, Source.resolution, Source.user_id, Source.public_body_id)
+WHEN NOT MATCHED THEN INSERT VALUES (Source.id, Source.jurisdiction, Source.refusal_reason, Source.costs, Source.due_date, Source.resolved_on, Source.created_at, Source.last_message, Source.status, Source.resolution, Source.user_id, Source.public_body_id)
 WHEN MATCHED THEN UPDATE SET jurisdiction=Source.jurisdiction, 
-                        refusal_reason=Source.refusal,
+                        refusal_reason=Source.refusal_reason,
                         costs=Source.costs,
                         due_date=Source.due_date,
                         resolved_on=Source.resolved_on,
-                        created_at=Source.first_message,
+                        created_at=Source.created_at,
                         last_message=Source.last_message,
                         status=Source.status,
                         resolution=Source.resolution,
@@ -44,7 +44,7 @@ WHEN MATCHED THEN UPDATE SET jurisdiction=Source.jurisdiction,
 """
 
 merge_messages = """
-MERGE INTO messages AS Target USING tmp_messages ON Target.id=Source.id
+MERGE INTO messages AS Target USING tmp_messages AS Source ON Target.id=Source.id
 WHEN NOT MATCHED THEN INSERT VALUES (Source.id, Source.request, Source.sent, Source.is_response, Source.is_postal, Source.kind, Source.sender_public_body, Source.recipient_public_body, Source.status, Source.timestamp)
 WHEN MATCHED THEN UPDATE SET request=Source.request,
                         sent=Source.sent,
@@ -52,7 +52,7 @@ WHEN MATCHED THEN UPDATE SET request=Source.request,
                         is_postal=Source.is_postal,
                         kind=Source.kind,
                         sender_public_body=Source.sender_public_body,
-                        recipient_target_body=Source.recipient_target_body,
+                        recipient_public_body=Source.recipient_public_body,
                         status=Source.status,
                         timestamp=Source.timestamp
 """

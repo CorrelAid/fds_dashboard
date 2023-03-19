@@ -59,24 +59,33 @@ def update_entries(cols_foi_requests, cols_messages, cols_pbodies, console):
         console.print("Preprocessing requests...")
         pp_requests()
 
-        df_foi_requests = pd.read_csv("../data/update_foi_requests.csv")
+        foi_dtypes = {'id':int, 'jurisdiction': str, 'refusal_reason': str, 'costs': float, 'due_date': str, 'resolved_on': str, 'created_at': str, 'last_message': str, 'status': str, 'user': float, 'public_body_id': int}
+        df_foi_requests = pd.read_csv("../data/update_foi_requests.csv", dtype=foi_dtypes)
+        df_foi_requests['resolved_on'] = df_foi_requests['resolved_on'].fillna(np.nan).replace([np.nan], [None])
+        console.print(df_foi_requests.dtypes)
         upload_foi(df_foi_requests, console=console)
-        
+                
     if new_message:
         console.print("Preprocessing messages...")
         pp_messages()
 
-        df_messages = pd.read_csv("../data/update_messages.csv")
+        messages_dtypes = {'id': int, 'sent': int, 'sent': bool, 'is_response': bool, 'is_postal': bool, 'kind': str, 'sender_public_body': float, 'recipient_public_body': float, 'status': str, 'timestamp': str}
+        df_messages = pd.read_csv("../data/update_messages.csv", dtype=messages_dtypes)
         upload_message(df_messages, console=console)
 
     if new_public_body:
         console.print("Preprocessing public_bodies...")
         pp_pb()
 
-        df_public_bodies = pd.read_csv("../data/update_public_bodies.csv")
-        df_classifications = pd.read_csv("../data/update_classifications.csv")
-        df_categories = pd.read_csv("../data/update_categories.csv")
-        df_jurisdiction = pd.read_csv("../data/update_jurisdictions.csv")
+        pb_dtypes = {'id': int, 'name': str, 'classification': str, 'categories': str, 'address': str, 'jurisdiction': int }
+        df_public_bodies = pd.read_csv("../data/update_public_bodies.csv", dtype=pb_dtypes)
+        df_public_bodies['classification'] = df_public_bodies['classification'].fillna(np.nan).replace([np.nan], [None])
+        df_public_bodies['categories'] = df_public_bodies['categories'].fillna(np.nan).replace([np.nan], [None])
+        jur_dtypes = {'id': int, 'name': str, 'rank': int}
+        df_jurisdiction = pd.read_csv("../data/update_jurisdictions.csv", dtype=jur_dtypes)
+
+        #df_classifications = pd.read_csv("../data/update_classifications.csv")
+        #df_categories = pd.read_csv("../data/update_categories.csv")
 
         upload_pb(df_public_bodies, console=console)
         upload_jur(df_jurisdiction, console=console)
@@ -109,10 +118,42 @@ def update_entries(cols_foi_requests, cols_messages, cols_pbodies, console):
 
 # Overall process test run
 
+#pp_pb()
+'''
+pb_dtypes = {'id': int, 'name': str, 'classification': str, 'categories': str, 'address': str, 'jurisdiction': int }
+df_public_bodies = pd.read_csv("../data/update_public_bodies.csv", dtype=pb_dtypes)
+df_public_bodies['classification'] = df_public_bodies['classification'].fillna(np.nan).replace([np.nan], [None])
+df_public_bodies['categories'] = df_public_bodies['categories'].fillna(np.nan).replace([np.nan], [None])
+
+jur_dtypes = {'id': int, 'name': str, 'rank': int}
+df_jurisdiction = pd.read_csv("../data/update_jurisdictions.csv", dtype=jur_dtypes)
+#upload_pb(df_public_bodies, console=console)
+upload_jur(df_jurisdiction, console=console)
+'''
+
+
+'''
+pp_messages()
+
+messages_dtypes = {'id': int, 'sent': int, 'sent': bool, 'is_response': bool, 'is_postal': bool, 'kind': str, 'sender_public_body': float, 'recipient_public_body': float, 'status': str, 'timestamp': str}
+df_messages = pd.read_csv("../data/update_messages.csv", dtype=messages_dtypes)
+upload_message(df_messages, console=console)
+'''
+'''
+foi_dtypes = {'id':int, 'jurisdiction': str, 'refusal_reason': str, 'costs': float, 'due_date': str, 'resolved_on': str, 'created_at': str, 'last_message': str, 'status': str, 'user': float, 'public_body_id': int}
+df_foi_requests = pd.read_csv("../data/update_foi_requests.csv", dtype=foi_dtypes)
+df_foi_requests['resolved_on'] = df_foi_requests['resolved_on'].fillna(np.nan).replace([np.nan], [None])
+console.print(df_foi_requests.dtypes)
+upload_foi(df_foi_requests, console=console)
+'''
+
+#df_foi_requests = pd.read_csv("../data/update_foi_requests.csv")
+'''
 t = time()
 update_entries(cols_foi_requests, cols_messages, cols_pbodies, console=console)
 t2= time()
 console.print("Time taken for whole process: {}".format((t2-t)//3600))
+'''
 #console.print("Time taken for whole process: {}".format(t2-t))
 
 
