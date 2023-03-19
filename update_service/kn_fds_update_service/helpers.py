@@ -5,6 +5,7 @@ from datetime import datetime
 import requests
 from sys import exit
 import math
+import numpy as np
 import pandas as pd
 import pytz
 from sqlalchemy import text
@@ -61,6 +62,16 @@ def get_entries(cols_foi_requests, cols_messages, cols_pbodies, latest_message, 
     new_pbodies = dload_update("https://fragdenstaat.de/api/v1/publicbody/", "public_bodies", "id", cols_pbodies, latest_id, console)
     return new_foi, new_mess, new_pbodies
 
+def handle_nan(df, cols):
+      '''
+      Function to handle Nan values in data.
+      Pandas doesn't accept missing values for integer columns, sqlalchemy cannot cast NaN values to integer.
+      Therefore, nan values are converted to None, which enables casting to integer by sqlalchemy.
+      '''
+      for col in cols:
+        df[col] = df[col].fillna(np.nan).replace([np.nan], [None])
+      return df
+
 '''
 def preprocessing(console):
     console.print("preprocessing requests...")
@@ -69,7 +80,7 @@ def preprocessing(console):
     pp_messages()
     console.print("preprocessing public_bodies...")
     pp_pb()
-'''
+
 
 def get_values():
     
@@ -81,7 +92,7 @@ def get_values():
     df_messages = pd.read_csv("../data/update_messages.csv")
 
     return df_foi_requests, df_public_bodies, df_classifications, df_categories, df_jurisdiction, df_messages
-
+'''
 ########################################################################################################## 
 
 ##### Based on https://betterprogramming.pub/load-fast-load-big-with-compressed-pickles-5f311584507e #####
