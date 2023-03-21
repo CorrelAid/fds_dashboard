@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from models import FoiRequest
+from models import FoiRequest, PublicBody, Jurisdiction, Campaign, Message
 from query_text import *
-from sqlalchemy import select, text, MetaData, Table
+from sqlalchemy import select, text, MetaData, Table, asc, desc
 from datetime import datetime
 
 def sql_query(db, query):
@@ -48,7 +48,12 @@ def group_by_count(db, table, column, l, s):
         # metadata = MetaData()
         # table2 = Table(table, metadata, autoload=True, autoload_with=db)
         # column2 = getattr(table2.c, l); getattr(table.columns, l)
-         stmt = select(column, func.count(table.id)).where(table.public_body_id == s).group_by(column)
+        if l == 'public_body':
+            stmt = select(column, func.count(table.id)).where(table.public_body_id == s).group_by(column)
+        elif l == 'jurisdiction':
+            stmt = select(column, func.count(table.id)).where(table.jurisdiction == s).group_by(column)
+        else:
+             stmt = select(column, func.count(table.id)).where(table.campaign == s).group_by(column)
     else:
          stmt = select(column, func.count(table.id)).group_by(column)
     result = db.execute(stmt).fetchall()
@@ -87,6 +92,53 @@ def request_count(db, table, l, s):
      result = [tuple(row) for row in result]
      return result[0][0]
 
+def drop_down_options(db, table):
+    stmt = select(table.id.distinct(), table.name).order_by(asc(table.name))
+    result = db.execute(stmt).fetchall()
+    result = [tuple(row) for row in result]
+    print(result)
+    return result
+
+def campaign_start_dates(db):
+    stmt = select(Campaign.id.distinct(), Campaign.start_date).order_by(asc(Campaign.start_date))
+    result = db.execute(stmt).fetchall()
+    result = [tuple(row) for row in result]
+    return result
+
+def ranking(db):
+    total_num = db.session.query(FoiRequest.public_body_id, db.func.count(FoiRequest.id.distinct())\
+                                 .where(FoiRequest.public_body_id != None))\
+                                 .group_by(FoiRequest.publi_body_id).subquery()
+     
+    resolved_mess = db.session.query(Message.request.distinct()\
+                                     .where(Message.status == 'resolved'))
+    
+    resolved = db.session.query(FoiRequest.public_body_id, db.func.count(FoiRequest.id.distinct())\
+                                .where(FoiRequest.public_body_id != None))\
+                                .filter(FoiRequest.id.in_(resolved_mess))\
+                                .group_by(FoiRequest.publi_body_id).subquery()
+
+    res_date = db.session.query(Message.request.distinct(), db.func.min(Message.timestamp)\
+                                .where(Message.status == 'resolved'))\
+                                .group_by(Message.request).subquery()
+
+    unres = db.session.query(Message.request, db.func.max(Message.timestamp)\
+                            .where(FoiRequest.public_body_id != None)\
+                            .filter(~FoiRequest.id.in_(resolved_mess)))\
+                            .group_by(FoiRequest.publi_body_id).subquery()
+    
+    late_res = db.session.query(FoiRequest.id)\
+        .join(unres, FoiRequest.id == unres.request)\
+        .where(FoiRequest.due_date < unres.min)
+    
+
+
+
+    subquery = session.query(table_c.id)
+    query = query.filter(~table_a.id.in_(subquery))
+
+    return result
+
  
 def query_stats(db, l, s):
     return {"stats_foi_requests": request_count(db, FoiRequest, l=l, s=s),
@@ -97,10 +149,10 @@ def query_stats(db, l, s):
 
 
 def query_general_info(db, l = None, s = None):
-    return {"jurisdictions": sql_to_dict(db, sql_jurisdictions),
-            "public_bodies": sql_to_dict(db, sql_public_bodies)}
+    return {"jurisdictions": drop_down_options(db, Jurisdiction),
+            "public_bodies": drop_down_options(db, PublicBody),
+            "campaign_starts": campaign_start_dates(db)}
     
-
 def query_ranking_public_body(db, l = None, s = None):
     return {"public_bodies": sql_to_dict_lst(db, sql_ranking_pb)}
 

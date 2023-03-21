@@ -56,3 +56,12 @@ class PublicBody(Base):
     categories = Column(Integer)
     address = Column(String(500))
     jurisdiction = Column(Integer)
+
+class Campaign(Base):
+    __tablename__ = 'campaigns'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(500))
+    slug = Column(String(30))
+    start_date = Column(TIMESTAMP(precision=6))
+    active = Column(Boolean)

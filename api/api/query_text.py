@@ -48,7 +48,7 @@ l.count as Fristüberschreitungen, (CAST(l.count as decimal(16,2))/tn.count) * 1
 FROM public.public_bodies pb JOIN resolved res ON pb.id=res.public_body_id
 JOIN total_num tn ON pb.id=res.public_body_id
 JOIN late l ON l.id=pb.id
-WHERE pb.id=tn.public_body_id AND tn.public_body_id=res.public_body_id AND tn.count>50
+WHERE pb.id=tn.public_body_id AND tn.public_body_id=res.public_body_id AND tn.count>20
 ORDER BY Verspätungsquote ASC
 LIMIT 10
 '''

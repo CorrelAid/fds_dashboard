@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from pydantic.schema import Optional, List
 from datetime import datetime
+from collections import OrderedDict
 
 class Stats(BaseModel):
     stats_foi_requests: int
@@ -12,6 +13,7 @@ class Stats(BaseModel):
 class GeneralInfo(BaseModel):
     jurisdictions: dict
     public_bodies: dict
+  #  campaigns: dict
     
 class Ranking_public_body(BaseModel):
     public_bodies: List[dict]
