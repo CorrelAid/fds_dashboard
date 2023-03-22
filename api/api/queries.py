@@ -151,7 +151,7 @@ def ranking_public_body(db, s: str):
                   .join(total_num, PublicBody.id == total_num.c.public_body_id)\
                   .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
                   .where(total_num.c.public_body_id == resolved.c.public_body_id)\
-                  .where(total_num.c.count>19)\
+                  .where(total_num.c.count>20)\
                   .order_by(desc(s))\
                   .limit(10)   
     else:
@@ -160,7 +160,7 @@ def ranking_public_body(db, s: str):
                   .join(total_num, PublicBody.id == total_num.c.public_body_id)\
                   .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
                   .where(total_num.c.public_body_id == resolved.c.public_body_id)\
-                  .where(total_num.c.count>19)\
+                  .where(total_num.c.count>20)\
                   .order_by(s)\
                   .limit(10)                                                  
     result = db.execute(stmt).fetchall()
@@ -186,7 +186,7 @@ def ranking_jurisdictions(db, s: str):
                   .join(total_num, PublicBody.id == total_num.c.public_body_id)\
                   .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
                   .where(total_num.c.public_body_id == resolved.c.public_body_id)\
-                  .where(total_num.c.count>49)\
+                  .where(total_num.c.count>50)\
                   .group_by(Jurisdiction.name)\
                   .order_by(desc(s))\
                   .limit(10)   
@@ -197,7 +197,7 @@ def ranking_jurisdictions(db, s: str):
                   .join(total_num, PublicBody.id == total_num.c.public_body_id)\
                   .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
                   .where(total_num.c.public_body_id == resolved.c.public_body_id)\
-                  .where(total_num.c.count>49)\
+                  .where(total_num.c.count>50)\
                   .group_by(Jurisdiction.name)\
                   .order_by(s)\
                   .limit(10)                                                  
