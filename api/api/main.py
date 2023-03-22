@@ -44,12 +44,14 @@ def root(db: Session = Depends(get_db)):
     return cache_handler(db, l = None, s= None, key = "general_info", query_function = query_general_info)
 
 @app.get("/ranking_public_body",response_model=Ranking_public_body)
-def root(db: Session = Depends(get_db)):
-    return cache_handler(db, l = None, s= None, key = "ranking_public_body", query_function = query_ranking_public_body)
+def root(db: Session = Depends(get_db),
+         s: Union[str, None] = Query(default='Verspätungsquote', max_length=25)):
+    return cache_handler(db, l = None, s= s, key = f"ranking_public_body_{s}", query_function = query_ranking_public_body)
 
 @app.get("/ranking_jurisdiction",response_model=Ranking_jurisdiction)
-def root(db: Session = Depends(get_db)):
-    return cache_handler(db, l = None, s= None, key = "ranking_jurisdiction", query_function = query_ranking_jurisdiction)
+def root(db: Session = Depends(get_db),
+         s: Union[str, None] = Query(default='Verspätungsquote', max_length=25)):
+    return cache_handler(db, l = None, s= s, key = f"ranking_jurisdiction_{s}", query_function = query_ranking_jurisdiction)
 
 
 # def start():

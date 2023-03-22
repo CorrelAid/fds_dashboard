@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models import FoiRequest, PublicBody, Jurisdiction, Campaign, Message
 from query_text import *
-from sqlalchemy import select, text, MetaData, Table, asc, desc
+from sqlalchemy import select, text, MetaData, Table, asc, desc, cast, DECIMAL, Float
 from datetime import datetime
 
 def sql_query(db, query):
@@ -106,38 +106,115 @@ def campaign_start_dates(db):
     return result
 
 def ranking(db):
-    total_num = db.session.query(FoiRequest.public_body_id, db.func.count(FoiRequest.id.distinct())\
-                                 .where(FoiRequest.public_body_id != None))\
-                                 .group_by(FoiRequest.publi_body_id).subquery()
-     
-    resolved_mess = db.session.query(Message.request.distinct()\
-                                     .where(Message.status == 'resolved'))
+    total_num = select(FoiRequest.public_body_id, func.count(FoiRequest.id.distinct()))\
+                        .where(FoiRequest.public_body_id != None)\
+                        .group_by(FoiRequest.public_body_id).subquery()
+
+    resolved_mess = select(Message.request.distinct())\
+                           .where(Message.status == 'resolved').subquery()
+
+    resolved = select(FoiRequest.public_body_id, func.count(FoiRequest.id.distinct()))\
+                      .where(FoiRequest.public_body_id != None)\
+                      .filter(FoiRequest.id.in_(resolved_mess))\
+                      .group_by(FoiRequest.public_body_id).subquery()
+
+    res_date = select(Message.request, func.min(Message.timestamp))\
+                      .where(Message.status == 'resolved')\
+                      .group_by(Message.request).subquery()
+
+    unres = select(Message.request, func.max(Message.timestamp))\
+                   .filter(~Message.request.in_(resolved_mess))\
+                   .group_by(Message.request).subquery()
     
-    resolved = db.session.query(FoiRequest.public_body_id, db.func.count(FoiRequest.id.distinct())\
-                                .where(FoiRequest.public_body_id != None))\
-                                .filter(FoiRequest.id.in_(resolved_mess))\
-                                .group_by(FoiRequest.publi_body_id).subquery()
+    late_res = select(FoiRequest.id)\
+                      .join(res_date, FoiRequest.id == res_date.c.request)\
+                      .where(FoiRequest.due_date < res_date.c.min).subquery()
 
-    res_date = db.session.query(Message.request.distinct(), db.func.min(Message.timestamp)\
-                                .where(Message.status == 'resolved'))\
-                                .group_by(Message.request).subquery()
-
-    unres = db.session.query(Message.request, db.func.max(Message.timestamp)\
-                            .where(FoiRequest.public_body_id != None)\
-                            .filter(~FoiRequest.id.in_(resolved_mess)))\
-                            .group_by(FoiRequest.publi_body_id).subquery()
+    late_unres = select(FoiRequest.id)\
+                      .join(unres, FoiRequest.id == unres.c.request)\
+                      .where(FoiRequest.due_date < unres.c.max).subquery()
     
-    late_res = db.session.query(FoiRequest.id)\
-        .join(unres, FoiRequest.id == unres.request)\
-        .where(FoiRequest.due_date < unres.min)
+    late_all = select(func.coalesce(late_res.c.id, late_unres.c.id).label('id'))\
+               .join(late_unres, late_res.c.id == late_unres.c.id, full=True).subquery()
+
+    late = select(FoiRequest.public_body_id, func.count(late_all.c.id.distinct()))\
+           .join(late_all, FoiRequest.id == late_all.c.id)\
+           .group_by(FoiRequest.public_body_id).subquery()   
     
+    return late, total_num, resolved, late
 
+def ranking_public_body(db, s: str):
+    late, total_num, resolved, late = ranking(db)
+    if s in ['Anzahl', 'Erfolgsquote']:
+         stmt = select(PublicBody.name, total_num.c.count.label('Anzahl'), (cast(resolved.c.count, Float)/total_num.c.count * 100).label('Erfolgsquote'), late.c.count.label('Fristüberschreitungen'), (cast(late.c.count, Float)/total_num.c.count * 100).label('Verspätungsquote'))\
+                  .join(resolved, PublicBody.id == resolved.c.public_body_id)\
+                  .join(total_num, PublicBody.id == total_num.c.public_body_id)\
+                  .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
+                  .where(total_num.c.public_body_id == resolved.c.public_body_id)\
+                  .where(total_num.c.count>19)\
+                  .order_by(desc(s))\
+                  .limit(10)   
+    else:
+         stmt = select(PublicBody.name, total_num.c.count.label('Anzahl'), (cast(resolved.c.count, Float)/total_num.c.count * 100).label('Erfolgsquote'), late.c.count.label('Fristüberschreitungen'), (cast(late.c.count, Float)/total_num.c.count * 100).label('Verspätungsquote'))\
+                  .join(resolved, PublicBody.id == resolved.c.public_body_id)\
+                  .join(total_num, PublicBody.id == total_num.c.public_body_id)\
+                  .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
+                  .where(total_num.c.public_body_id == resolved.c.public_body_id)\
+                  .where(total_num.c.count>19)\
+                  .order_by(s)\
+                  .limit(10)                                                  
+    result = db.execute(stmt).fetchall()
+    lst = []
+    keys = list(dict(result[0]).keys())
+    for row in result:
+                print(row)
+                dct = {}
+                dct["name"] = str(row[keys[0]])
+                dct["number"] = int(row[keys[1]])
+                dct["success_rate"] = float(row[keys[2]])
+                dct["number_overdue"] = int(row[keys[3]])
+                dct["overdue_rate"] = float(row[keys[4]])
+                lst.append(dct)    
+    return lst
 
+def ranking_jurisdictions(db, s: str):
+    late, total_num, resolved, late = ranking(db)
+    if s in ['Anzahl', 'Erfolgsquote']:
+         stmt = select(Jurisdiction.name, func.sum(total_num.c.count).label('Anzahl'), (cast(func.sum(resolved.c.count), Float)/func.sum(total_num.c.count) * 100).label('Erfolgsquote'), func.sum(late.c.count).label('Fristüberschreitungen'), (cast(func.sum(late.c.count), Float)/func.sum(total_num.c.count) * 100).label('Verspätungsquote'))\
+                  .join(PublicBody, Jurisdiction.id == PublicBody.jurisdiction)\
+                  .join(resolved, PublicBody.id == resolved.c.public_body_id)\
+                  .join(total_num, PublicBody.id == total_num.c.public_body_id)\
+                  .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
+                  .where(total_num.c.public_body_id == resolved.c.public_body_id)\
+                  .where(total_num.c.count>49)\
+                  .group_by(Jurisdiction.name)\
+                  .order_by(desc(s))\
+                  .limit(10)   
+    else:
+         stmt = select(Jurisdiction.name, func.sum(total_num.c.count).label('Anzahl'), (cast(func.sum(resolved.c.count), Float)/func.sum(total_num.c.count) * 100).label('Erfolgsquote'), func.sum(late.c.count).label('Fristüberschreitungen'), (cast(func.sum(late.c.count), Float)/func.sum(total_num.c.count) * 100).label('Verspätungsquote'))\
+                  .join(PublicBody, Jurisdiction.id == PublicBody.jurisdiction)\
+                  .join(resolved, PublicBody.id == resolved.c.public_body_id)\
+                  .join(total_num, PublicBody.id == total_num.c.public_body_id)\
+                  .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
+                  .where(total_num.c.public_body_id == resolved.c.public_body_id)\
+                  .where(total_num.c.count>49)\
+                  .group_by(Jurisdiction.name)\
+                  .order_by(s)\
+                  .limit(10)                                                  
+    result = db.execute(stmt).fetchall()
+    lst = []
+    keys = list(dict(result[0]).keys())
+    for row in result:
+                print(row)
+                dct = {}
+                dct["name"] = str(row[keys[0]])
+                dct["number"] = int(row[keys[1]])
+                dct["success_rate"] = float(row[keys[2]])
+                dct["number_overdue"] = int(row[keys[3]])
+                dct["overdue_rate"] = float(row[keys[4]])
+                lst.append(dct)    
+    return lst
 
-    subquery = session.query(table_c.id)
-    query = query.filter(~table_a.id.in_(subquery))
-
-    return result
 
  
 def query_stats(db, l, s):
@@ -153,10 +230,10 @@ def query_general_info(db, l = None, s = None):
             "public_bodies": drop_down_options(db, PublicBody),
             "campaign_starts": campaign_start_dates(db)}
     
-def query_ranking_public_body(db, l = None, s = None):
-    return {"public_bodies": sql_to_dict_lst(db, sql_ranking_pb)}
+def query_ranking_public_body(db, s, l = None):
+    return {"public_bodies": ranking_public_body(db, s)}
 
 def query_ranking_jurisdiction(db, l = None, s = None):
-    return {"jurisdictions": sql_to_dict_lst(db, sql_ranking_jurisdictions)}
+    return {"jurisdictions": ranking_jurisdictions(db, s)}
 
     
