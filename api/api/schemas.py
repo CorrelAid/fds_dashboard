@@ -9,17 +9,20 @@ class Stats(BaseModel):
     stats_dist_resolution: dict
     stats_dist_status: dict
     stats_requests_by_month: dict
+    stats_percentage_costs: float
 
 class GeneralInfo(BaseModel):
     jurisdictions: dict
     public_bodies: dict
-  #  campaigns: dict
+  # campaigns: dict
     
 class Ranking_public_body(BaseModel):
     public_bodies: List[dict]
 
 class Ranking_jurisdiction(BaseModel):
     jurisdictions: List[dict]
+
+
     
 
     

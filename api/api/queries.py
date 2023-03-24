@@ -215,14 +215,31 @@ def ranking_jurisdictions(db, s: str):
                 lst.append(dct)    
     return lst
 
+def percentage_costs(db, l, s):
+    if l == None and s == None:
+         not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).subquery()
+         stmt = select(func.count(not_free.c.id.distinct())/(cast(func.count(FoiRequest.id.distinct()), Float))*100)\
+                  .join(not_free, not_free.c.id ==FoiRequest.id, isouter=True)
+    else:
+         if l == 'public_body':
+              not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(FoiRequest.public_body_id == s).subquery()
+              stmt = select(func.count(not_free.c.id.distinct())/(cast(func.count(FoiRequest.id.distinct()), Float))*100)\
+                  .join(not_free, not_free.c.id ==FoiRequest.id, isouter=True).where(FoiRequest.public_body_id == s)
+         else:
+              not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(FoiRequest.jurisdiction == s).subquery()
+              stmt = select(func.count(not_free.c.id.distinct())/(cast(func.count(FoiRequest.id.distinct()), Float))*100)\
+                  .join(not_free, not_free.c.id ==FoiRequest.id, isouter=True).where(FoiRequest.jurisdiction == s)
+    result = db.execute(stmt).fetchall()
+    result = [tuple(row) for row in result]
+    return result[0][0]
 
- 
 def query_stats(db, l, s):
     return {"stats_foi_requests": request_count(db, FoiRequest, l=l, s=s),
             "stats_users": user_count(db, FoiRequest, l=l, s=s),
             "stats_dist_resolution": group_by_count(db, FoiRequest, FoiRequest.resolution, l=l, s=s),
             "stats_dist_status": group_by_count(db, FoiRequest, FoiRequest.status, l=l, s=s),
-            "stats_requests_by_month": requests_by_month(db, FoiRequest, FoiRequest.first_message, l=l, s=s)}
+            "stats_requests_by_month": requests_by_month(db, FoiRequest, FoiRequest.first_message, l=l, s=s),
+            "stats_percentage_costs": percentage_costs(db, l=l, s=s)}
 
 
 def query_general_info(db, l = None, s = None):
