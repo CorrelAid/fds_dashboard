@@ -39,11 +39,11 @@ def dload(url:str,type:str,sort_by:str, keep_cols:list, console):
                                 },
                         )
         
-        total = initial_res.json()["meta"]["stats_count"]
+        total = initial_res.json()["meta"]["total_count"]
 
         # Calculating max offset and number of needed requests
         fifties = math.ceil(total/50)
-        console.print(f"Total count: [bold green]{fifties}[/bold green]. We have to send [bold green]{total}[/bold green] requests.")
+        console.print(f"Total count: [bold green]{total}[/bold green]. We have to send [bold green]{fifties}[/bold green] requests.")
         max_offset = total - 50
 
         console.rule("")
@@ -51,7 +51,7 @@ def dload(url:str,type:str,sort_by:str, keep_cols:list, console):
         all_objects = []
         offset = total-50
         i = 1
-        stats_adjust = 0
+        total_adjust = 0
         current_total=total
         
         while offset != 0:
@@ -69,7 +69,7 @@ def dload(url:str,type:str,sort_by:str, keep_cols:list, console):
                                 )
                         res.raise_for_status()
                         
-                        updated_total = res.json()["meta"]["stats_count"]
+                        updated_total = res.json()["meta"]["total_count"]
 
                         all_objects += res.json()["objects"]
                         
@@ -99,13 +99,13 @@ def dload(url:str,type:str,sort_by:str, keep_cols:list, console):
                         console.print("Adjustment of offset by {x} required, because new data was added.".format(x=adjustment))
                 
                 offset += adjustment
-                stats_adjust += adjustment
+                total_adjust += adjustment
                 
                 # if adjustment greater than limit
-                if stats_adjust > 50:
+                if total_adjust > 50:
                         fifties += 1
-                        console.print("Number of requests increased. Resetting stats_adjust")
-                        stats_adjust = 0
+                        console.print("Number of requests increased. Resetting total_adjust")
+                        total_adjust = 0
                 
                 # decreasing offset
                 if offset > 0:
