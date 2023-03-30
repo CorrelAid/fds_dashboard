@@ -106,7 +106,7 @@ def campaign_start_dates(db):
     return result
 
 def ranking(db):
-    total_num = select(FoiRequest.public_body_id, func.count(FoiRequest.id.distinct()))\
+    stats_num = select(FoiRequest.public_body_id, func.count(FoiRequest.id.distinct()))\
                         .where(FoiRequest.public_body_id != None)\
                         .group_by(FoiRequest.public_body_id).subquery()
 
@@ -141,26 +141,26 @@ def ranking(db):
            .join(late_all, FoiRequest.id == late_all.c.id)\
            .group_by(FoiRequest.public_body_id).subquery()   
     
-    return late, total_num, resolved, late
+    return late, stats_num, resolved, late
 
 def ranking_public_body(db, s: str):
-    late, total_num, resolved, late = ranking(db)
+    late, stats_num, resolved, late = ranking(db)
     if s in ['Anzahl', 'Erfolgsquote']:
-         stmt = select(PublicBody.name, total_num.c.count.label('Anzahl'), (cast(resolved.c.count, Float)/total_num.c.count * 100).label('Erfolgsquote'), late.c.count.label('Fristüberschreitungen'), (cast(late.c.count, Float)/total_num.c.count * 100).label('Verspätungsquote'))\
+         stmt = select(PublicBody.name, stats_num.c.count.label('Anzahl'), (cast(resolved.c.count, Float)/stats_num.c.count * 100).label('Erfolgsquote'), late.c.count.label('Fristüberschreitungen'), (cast(late.c.count, Float)/stats_num.c.count * 100).label('Verspätungsquote'))\
                   .join(resolved, PublicBody.id == resolved.c.public_body_id)\
-                  .join(total_num, PublicBody.id == total_num.c.public_body_id)\
+                  .join(stats_num, PublicBody.id == stats_num.c.public_body_id)\
                   .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
-                  .where(total_num.c.public_body_id == resolved.c.public_body_id)\
-                  .where(total_num.c.count>20)\
+                  .where(stats_num.c.public_body_id == resolved.c.public_body_id)\
+                  .where(stats_num.c.count>20)\
                   .order_by(desc(s))\
                   .limit(10)   
     else:
-         stmt = select(PublicBody.name, total_num.c.count.label('Anzahl'), (cast(resolved.c.count, Float)/total_num.c.count * 100).label('Erfolgsquote'), late.c.count.label('Fristüberschreitungen'), (cast(late.c.count, Float)/total_num.c.count * 100).label('Verspätungsquote'))\
+         stmt = select(PublicBody.name, stats_num.c.count.label('Anzahl'), (cast(resolved.c.count, Float)/stats_num.c.count * 100).label('Erfolgsquote'), late.c.count.label('Fristüberschreitungen'), (cast(late.c.count, Float)/stats_num.c.count * 100).label('Verspätungsquote'))\
                   .join(resolved, PublicBody.id == resolved.c.public_body_id)\
-                  .join(total_num, PublicBody.id == total_num.c.public_body_id)\
+                  .join(stats_num, PublicBody.id == stats_num.c.public_body_id)\
                   .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
-                  .where(total_num.c.public_body_id == resolved.c.public_body_id)\
-                  .where(total_num.c.count>20)\
+                  .where(stats_num.c.public_body_id == resolved.c.public_body_id)\
+                  .where(stats_num.c.count>20)\
                   .order_by(s)\
                   .limit(10)                                                  
     result = db.execute(stmt).fetchall()
@@ -178,26 +178,26 @@ def ranking_public_body(db, s: str):
     return lst
 
 def ranking_jurisdictions(db, s: str):
-    late, total_num, resolved, late = ranking(db)
+    late, stats_num, resolved, late = ranking(db)
     if s in ['Anzahl', 'Erfolgsquote']:
-         stmt = select(Jurisdiction.name, func.sum(total_num.c.count).label('Anzahl'), (cast(func.sum(resolved.c.count), Float)/func.sum(total_num.c.count) * 100).label('Erfolgsquote'), func.sum(late.c.count).label('Fristüberschreitungen'), (cast(func.sum(late.c.count), Float)/func.sum(total_num.c.count) * 100).label('Verspätungsquote'))\
+         stmt = select(Jurisdiction.name, func.sum(stats_num.c.count).label('Anzahl'), (cast(func.sum(resolved.c.count), Float)/func.sum(stats_num.c.count) * 100).label('Erfolgsquote'), func.sum(late.c.count).label('Fristüberschreitungen'), (cast(func.sum(late.c.count), Float)/func.sum(stats_num.c.count) * 100).label('Verspätungsquote'))\
                   .join(PublicBody, Jurisdiction.id == PublicBody.jurisdiction)\
                   .join(resolved, PublicBody.id == resolved.c.public_body_id)\
-                  .join(total_num, PublicBody.id == total_num.c.public_body_id)\
+                  .join(stats_num, PublicBody.id == stats_num.c.public_body_id)\
                   .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
-                  .where(total_num.c.public_body_id == resolved.c.public_body_id)\
-                  .where(total_num.c.count>50)\
+                  .where(stats_num.c.public_body_id == resolved.c.public_body_id)\
+                  .where(stats_num.c.count>50)\
                   .group_by(Jurisdiction.name)\
                   .order_by(desc(s))\
                   .limit(10)   
     else:
-         stmt = select(Jurisdiction.name, func.sum(total_num.c.count).label('Anzahl'), (cast(func.sum(resolved.c.count), Float)/func.sum(total_num.c.count) * 100).label('Erfolgsquote'), func.sum(late.c.count).label('Fristüberschreitungen'), (cast(func.sum(late.c.count), Float)/func.sum(total_num.c.count) * 100).label('Verspätungsquote'))\
+         stmt = select(Jurisdiction.name, func.sum(stats_num.c.count).label('Anzahl'), (cast(func.sum(resolved.c.count), Float)/func.sum(stats_num.c.count) * 100).label('Erfolgsquote'), func.sum(late.c.count).label('Fristüberschreitungen'), (cast(func.sum(late.c.count), Float)/func.sum(stats_num.c.count) * 100).label('Verspätungsquote'))\
                   .join(PublicBody, Jurisdiction.id == PublicBody.jurisdiction)\
                   .join(resolved, PublicBody.id == resolved.c.public_body_id)\
-                  .join(total_num, PublicBody.id == total_num.c.public_body_id)\
+                  .join(stats_num, PublicBody.id == stats_num.c.public_body_id)\
                   .join(late, late.c.public_body_id == PublicBody.id, isouter=True)\
-                  .where(total_num.c.public_body_id == resolved.c.public_body_id)\
-                  .where(total_num.c.count>50)\
+                  .where(stats_num.c.public_body_id == resolved.c.public_body_id)\
+                  .where(stats_num.c.count>50)\
                   .group_by(Jurisdiction.name)\
                   .order_by(s)\
                   .limit(10)                                                  

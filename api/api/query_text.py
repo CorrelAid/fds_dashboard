@@ -1,5 +1,5 @@
 sql_ranking_pb = '''
-WITH total_num as (SELECT public_body_id, COUNT(DISTINCT id)
+WITH stats_num as (SELECT public_body_id, COUNT(DISTINCT id)
 		   	       FROM foi_requests
 		           WHERE public_body_id is not null
    		   		   GROUP BY public_body_id),
@@ -35,7 +35,7 @@ SELECT pb.name, tn.count as Anzahl,
 (CAST(res.count as decimal(16,2))/tn.count) * 100 as Erfolgsquote,
 l.count as Fristüberschreitungen, (CAST(l.count as decimal(16,2))/tn.count) * 100 as Verspätungsquote
 FROM public.public_bodies pb JOIN resolved res ON pb.id=res.public_body_id
-JOIN total_num tn ON pb.id=tn.public_body_id
+JOIN stats_num tn ON pb.id=tn.public_body_id
 LEFT JOIN late l ON l.public_body_id=pb.id
 WHERE tn.public_body_id=res.public_body_id AND tn.count>20
 ORDER BY Verspätungsquote ASC
@@ -43,7 +43,7 @@ LIMIT 10
 '''
 
 sql_ranking_jurisdictions='''
-WITH total_num as (SELECT public_body_id, COUNT(DISTINCT id)
+WITH stats_num as (SELECT public_body_id, COUNT(DISTINCT id)
 		   	       FROM foi_requests
 		           WHERE public_body_id is not null
    		   		   GROUP BY public_body_id),
@@ -81,7 +81,7 @@ SELECT j.name, SUM(tn.count) as Anzahl,
 SUM(l.count) as Fristüberschreitungen,
 (CAST(SUM(l.count) as decimal(16,2))/SUM(tn.count)) * 100 as Verspätungsquote
 FROM public.public_bodies pb JOIN resolved res ON pb.id=res.public_body_id
-JOIN total_num tn ON pb.id=res.public_body_id
+JOIN stats_num tn ON pb.id=res.public_body_id
 JOIN late l ON l.id=pb.id JOIN jurisdictions j ON j.id=pb.jurisdiction
 WHERE pb.id=tn.public_body_id AND tn.public_body_id=res.public_body_id AND tn.count>50
 GROUP BY j.name

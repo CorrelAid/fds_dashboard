@@ -117,7 +117,7 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
                                 },
                         )
         
-        total = initial_res.json()["meta"]["total_count"]
+        total = initial_res.json()["meta"]["stats_count"]
 
         # Calculating max offset and number of needed requests
         fifties = math.ceil(total/50)
@@ -129,7 +129,7 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
         new_objects = []
         offset = total-50
         i = 1
-        total_adjust = 0
+        stats_adjust = 0
         current_total=total
         
         while offset != 0:
@@ -147,7 +147,7 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
                                 )
                         res.raise_for_status()
                         
-                        updated_total = res.json()["meta"]["total_count"]
+                        updated_total = res.json()["meta"]["stats_count"]
 
                         #all_objects += res.json()["objects"]
                         #current_objects = []
@@ -204,13 +204,13 @@ def dload_update(url:str,type:str,sort_by:str, keep_cols:list, boundary, console
                         console.print("Adjustment of offset by {x} required, because new data was added.".format(x=adjustment))
                 
                 offset += adjustment
-                total_adjust += adjustment
+                stats_adjust += adjustment
                 
                 # if adjustment greater than limit
-                if total_adjust > 50:
+                if stats_adjust > 50:
                         fifties += 1
-                        console.print("Number of requests increased. Resetting total_adjust")
-                        total_adjust = 0
+                        console.print("Number of requests increased. Resetting stats_adjust")
+                        stats_adjust = 0
                 
                 # decreasing offset
                 if offset > 0:

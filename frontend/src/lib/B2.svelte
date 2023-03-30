@@ -1,5 +1,5 @@
 <script>
-    import { total_stats } from "../stores/total_stats.js";
+    import { stats } from "../stores/stats.js";
     import Balken from "./charts/Balken.svelte";
     import Card from "./Card.svelte";
 

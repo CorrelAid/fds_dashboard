@@ -1,5 +1,5 @@
 <script>
-  import { total_stats } from "./stores/total_stats.js";
+  import { stats } from "./stores/stats.js";
   import { general_info } from "./stores/general_info.js";
   import { ranking } from "./stores/ranking.js";
   import Filter from "./lib/Filter.svelte";
@@ -15,7 +15,7 @@
 </script>
 
 <!-- Before rendering components, subscribe to store (make api call) and check if data is loaded -->
-{#if !$total_stats}
+{#if !$stats}
   <h2>Loading...</h2>
 {:else}
   <div class="text-center p-3">

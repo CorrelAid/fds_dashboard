@@ -15,7 +15,7 @@ def pp_requests():
     df.drop_duplicates(subset="id", inplace=True, keep="first")
 
     # Removing columns we dont need and setting order (has to be the same as column order in sql table to simplify data import)
-    # df = df[["id", "jurisdiction", "refusal_reason", "costs", "due_date", "resolved_on", "first_message", "last_message", "status", "resolution", "user", "public_body"]]
+    df = df[["id", "jurisdiction", "refusal_reason", "costs", "due_date", "resolved_on", "first_message", "last_message", "status", "resolution", "user", "public_body", "campaign"]]
 
     # extracting public body ID to new column and dropping public body column 
     df["public_body_id"] = df["public_body"].apply(lambda dct: int(dct.get("id")) if dct is not None else None)
