@@ -1,4 +1,6 @@
-import { readable } from 'svelte/store';
+import { writable,derived } from 'svelte/store';
+
+export const selected_submit = writable(null);
 
 const endpoint = "http://localhost:3000";
 
@@ -88,18 +90,15 @@ function proc(data) {
 }
 
 // The readable() function takes in the initial state of the store and a function that will be called once there is a first subscription (will not be called repeatedly)
-export const stats = readable(null, function start(set) {
+export const stats = derived(selected_submit, ($selected_submit, set) => {
     fetch(endpoint).then(function (response) {
         if (!response.ok) {
             throw new Error('unable to load data');
         }
         return (response.json())}
     ).then(function (data) {
-            const stats = data
-            set(proc(stats))
+            console.log($selected_submit)
+            const stats = proc(data)
+            set(stats)
         })
-
-    return function stop() {
-        console.log('Store Stopped');
-    };
-})
+}, null)

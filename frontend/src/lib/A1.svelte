@@ -2,7 +2,7 @@
     import Line from "./charts/Line.svelte";
     import Card from "./Card.svelte";
     import { stats } from "../stores/stats.js";
-    $: console.log($stats.requests_by_month)
+  
 </script>
 
 <Card

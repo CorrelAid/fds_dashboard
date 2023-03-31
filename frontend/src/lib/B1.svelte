@@ -2,7 +2,6 @@
     import { stats } from "../stores/stats.js";
     import Balken from "./charts/Balken.svelte";
     import Card from "./Card.svelte";
-    $:console.log($stats)
 </script>
 
 <Card title={"Was ist der Status der momentan laufenden Anfragen?"}>

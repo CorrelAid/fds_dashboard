@@ -2,101 +2,122 @@
     import { clickOutside } from "./helpers/clickOutside";
     import Lense from "./svg/Lense.svelte";
     import Dropdown from "./svg/Dropdown.svelte";
+    import { selected_submit } from "../stores/stats.js";
     export let jurisdictions = [];
-    let scoops;
-    let selected = 0;
-    const filter_height = 50;
-    let show_type = "";
+    let type = "public_body";
+    let show = "";
+    let selected = null;
 
-    const toggle_type = () => {
-        show_type == "" ? (show_type = "show") : (show_type = "");
+    const toggle = () => {
+        show == "" ? (show = "show") : (show = "");
     };
 </script>
 
 <div class="container">
     <div class="row">
         <div class="col-12">
-            <p class="h5 text-center pt-2 pb-3">Statistiken anzeigen für:</p>
-            <div class="d-flex justify-content-center align-items-center">
-                <label >
-                    <input
-                        type="radio"
-                        bind:group={scoops}
-                        name="scoops"
-                        value={1}
-                    />
-                    Jurisdiktionen
-                </label>
-
-                <label class="px-2">
-                    <input
-                        type="radio"
-                        bind:group={scoops}
-                        name="scoops"
-                        value={2}
-                    />
-                    Behörden
-                </label>
-
-                <label class="px-2">
-                    <input
-                        type="radio"
-                        bind:group={scoops}
-                        name="scoops"
-                        value={3}
-                    />
-                    Kampagnen
-                </label>
+            <div class="d-flex justify-content-center align-items-center pt-4">
+                <ul class="nav nav-pills">
+                    <!-- <li class="nav-item">
+                      <button class="nav-link {type=="all"?"active":""}" on:click={()=> {type="all"}}>Alle</button>
+                    </li> -->
+                    <li class="nav-item">
+                        <button
+                            class="nav-link  {type == 'public_body'
+                                ? 'active'
+                                : ''}"
+                            on:click={() => {
+                                (type = "public_body"), (selected = "");
+                            }}>Behörden</button
+                        >
+                    </li>
+                    <li class="nav-item">
+                        <button
+                            class="nav-link {type == 'jurisdiction'
+                                ? 'active'
+                                : ''}"
+                            on:click={() => {
+                                (type = "jurisdiction"), (selected = "");
+                            }}>Jurisdiktionen</button
+                        >
+                    </li>
+                    <li class="nav-item">
+                        <button
+                            class="nav-link {type == 'campaign'
+                                ? 'active'
+                                : ''}"
+                            on:click={() => {
+                                (type = "campaign"), (selected = "");
+                            }}>Kampagnen</button
+                        >
+                    </li>
+                </ul>
             </div>
         </div>
 
-        <!-- {#if selected != 0} -->
         <div
             class="col-12  d-flex justify-content-center align-items-center py-4"
         >
             <div
                 class="dropdown show"
                 use:clickOutside
-                on:click_outside={show_type === "show" ? toggle_type() : null}
+                on:click_outside={show === "show" ? toggle() : null}
             >
                 <div
                     class="d-flex justify-content-center align-items-center "
-                    style="height: 30px;"
+                    style="height: 40px;"
                 >
-                    <span class="bg-white h-100">
+                    <span
+                        class="bg-white h-100 d-flex justify-content-center align-items-center"
+                    >
                         <Lense height={22} width={30} />
                     </span>
-                    <input type="text" class="search" placeholder="Search.." />
-                    <span class="bg-white h-100" on:click={toggle_type}>
+                    <input
+                        type="text"
+                        class="search"
+                        aria-disabled={type === "all" ? "true" : "false"}
+                        placeholder={type === "all"
+                            ? "Kategorie auswählen..."
+                            : "Suchen..."}
+                        on:focus={show === "" && type !== "all"
+                            ? toggle()
+                            : null}
+                        bind:value={selected}
+                    />
+                    <span
+                        class="bg-white h-100 d-flex justify-content-center align-items-center"
+                        on:click={() => {
+                            type !== "all" ? toggle() : null;
+                        }}
+                    >
                         <Dropdown height={22} width={30} />
                     </span>
+                    <button
+                        type="button"
+                        class="btn fw-normal btn-primary ms-3 h-100 d-flex justify-content-center align-items-center " on:click={()=>{$selected_submit=selected}}
+                        >Anzeigen</button
+                    >
                 </div>
 
                 <div
-                    class="dropdown-menu {show_type}"
+                    class="dropdown-menu {show}"
                     aria-labelledby="dropdownMenuLink"
                 >
-                    <a class="dropdown-item" href="#">Action</a>
-                    <a class="dropdown-item" href="#">Another action</a>
-                    <a class="dropdown-item" href="#">Something else here</a>
+                    <span
+                        class="dropdown-item"
+                        on:click={() => {
+                            (selected = null), (show = "");
+                        }}>Alle</span
+                    >
+                    <span
+                        class="dropdown-item"
+                        on:click={() => {
+                            (selected = "test"), (show = "");
+                        }}>Test</span
+                    >
                 </div>
             </div>
-            <!-- {#if selected == 1} -->
-            <!-- <select
-                        class="form-select h5"
-                        aria-label="Default select example"
-                    >
-                        <option value="0" selected>Alle Jurisdiktionen</option>
-                        {#each Object.values(jurisdictions) as jurisdiction, index}
-                            <option value={index + 1}>{jurisdiction}</option>
-                        {/each}
-                    </select> -->
-            <!-- {/if}
-                {#if selected == 2} -->
-            <!-- <input type="text" id="" placeholder="Alle Behörden" /> -->
-            <!-- {/if} -->
         </div>
-        <!-- {/if} -->
     </div>
 </div>
 
@@ -112,4 +133,10 @@
     .search:focus {
         outline: none;
     }
+
+    /* .search[aria-disabled="true"] {
+        background-color: white;
+        cursor:not-allowed;
+        pointer-events: unset;
+    } */
 </style>
