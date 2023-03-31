@@ -5,7 +5,6 @@
     export let data;
     export let height;
 
-    $: console.log(data)
 
     let el;
     let notMerge = false;

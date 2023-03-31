@@ -12,6 +12,7 @@
   import C2 from "./lib/C2.svelte";
   import D1 from "./lib/D1.svelte";
   import D2 from "./lib/D2.svelte";
+  
 </script>
 
 <!-- Before rendering components, subscribe to store (make api call) and check if data is loaded -->
@@ -67,11 +68,11 @@
         <D1 />
       </div>
     </div>
-    <div class="row ">
+    <!-- <div class="row ">
       <div class="col p-3">
         <D2 />
       </div>
-    </div>
+    </div> -->
   </div>
 {/if}
 

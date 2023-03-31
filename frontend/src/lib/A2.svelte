@@ -13,6 +13,6 @@
   <span class="h4">{data.stats_success_rate}%</span> erfolgreich.</p>
 <p>Die restlichen Anfragen endeten folgendermaßen:</p>
 </div> -->
-<Balken data = {$stats.stats_dist_resolution}  height={400}/>
+<Balken data = {$stats.dist_resolution}  height={400}/>
 </Card>
 

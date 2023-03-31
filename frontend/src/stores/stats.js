@@ -64,26 +64,26 @@ function translate_resolution(obj){
 
 
 function proc(data) {
+    
     // extracting number of resolved foi requests
-    data.stats_foi_requests_resolved = data.stats_dist_status.resolved
+    data.foi_requests_resolved = data.stats_dist_status.resolved
     // extracting number of foi requests not resolved yet
-    data.stats_foi_requests_not_resolved = data.stats_foi_requests - data.foi_requests_resolved
+    data.foi_requests_not_resolved = data.stats_foi_requests - data.foi_requests_resolved
     
     // calculating total success (rate)
-    data.stats_success = data.stats_dist_resolution.successful
-    data.stats_success_rate = Math.round((data.stats_dist_resolution.successful / data.stats_foi_requests) * 100)
+    data.success = data.stats_dist_resolution.successful
+    data.success_rate = Math.round((data.stats_dist_resolution.successful / data.stats_foi_requests) * 100)
 
     // processing status dist 
     // removing resolved foi requests from array
     
     // processing resolution dist
     // removing null (because these foi requests werent resolvey yet)
-    data.stats_dist_resolution = proc_obj(translate_resolution(data.stats_dist_resolution)).filter(data => data.name != 'null')
+    data.dist_resolution = proc_obj(translate_resolution(data.stats_dist_resolution)).filter(data => data.name != 'null')
 
     // processing requests by month
     
-    data.stats_requests_by_month = proc_obj_time(data.stats_requests_by_month)
-    
+    data.requests_by_month = proc_obj_time(data.stats_requests_by_month)
     return data
 }
 

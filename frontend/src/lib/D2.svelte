@@ -5,5 +5,5 @@
 </script>
 
 <Card title={"Jurisdiktionen"}>
-    <Table data={$ranking.jurisdictions} />
+    <Table data={$ranking} />
 </Card>
