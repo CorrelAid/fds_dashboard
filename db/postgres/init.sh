@@ -84,8 +84,8 @@ CREATE TABLE campaigns(
     is_response BOOLEAN,
     is_postal BOOLEAN,
     kind VARCHAR(15),
-    sender_public_body DECIMAL,
-    recipient_public_body DECIMAL,
+    sender_public_body_id INT,
+    recipient_public_body_id INT,
     status VARCHAR(20),
     timestamp TIMESTAMP(6) WITHOUT TIME ZONE,
     CONSTRAINT fk_foi_request
