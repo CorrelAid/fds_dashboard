@@ -9,6 +9,7 @@ COPY ./data/classifications.csv data/classifications.csv
 COPY ./data/categories.csv data/categories.csv
 COPY ./data/public_bodies.csv data/public_bodies.csv
 COPY ./data/jurisdictions.csv data/jurisdictions.csv
+COPY ./data/campaigns.csv data/campaigns.csv
 # copying postgres config to container
 COPY ./postgresql.conf etc/postgresql/postgresql.conf
 CMD ["-c", "config_file=/etc/postgresql/postgresql.conf"]

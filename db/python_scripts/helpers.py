@@ -43,7 +43,7 @@ def dload(url:str,type:str,sort_by:str, keep_cols:list, console):
 
         # Calculating max offset and number of needed requests
         fifties = math.ceil(total/50)
-        console.print(f"Total count: [bold green]{fifties}[/bold green]. We have to send [bold green]{total}[/bold green] requests.")
+        console.print(f"Total count: [bold green]{total}[/bold green]. We have to send [bold green]{fifties}[/bold green] requests.")
         max_offset = total - 50
 
         console.rule("")

@@ -1,15 +1,10 @@
 <script>
   export let data;
+  import { formatAsPercent } from "../helpers/formatting";
 
-  $: console.log(data)
+  // $: console.log(data)
 
-  function formatAsPercent(num) {
-  return new Intl.NumberFormat('default', {
-    style: 'percent',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num / 100);
-}
+
 </script>
 
 <table class="table">
@@ -23,7 +18,7 @@
     </tr>
   </thead>
   <tbody>
-    {#each data as row,i}
+    {#each data.public_bodies as row,i}
     <tr>
       <th scope="row">{i+1}</th>
       <td>{row.name}</td>

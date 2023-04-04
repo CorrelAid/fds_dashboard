@@ -1,6 +1,6 @@
 import { readable } from 'svelte/store';
 
-const endpoint = "http://localhost:3000/ranking";
+const endpoint = "http://localhost:3000/ranking_public_body";
 
 function proc_rankings(data) {
     data.public_bodies = data.public_bodies
@@ -16,7 +16,7 @@ export const ranking = readable(null, function start(set) {
         return (response.json())
     }
     ).then(function (data) {
-        set(proc_rankings(data))
+        set(data)
     })
 
     return function stop() {

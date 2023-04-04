@@ -341,5 +341,3 @@ def query_ranking_public_body(db, s, ascending, l = None):
 
 def query_ranking_jurisdiction(db, ascending, s, l = None):
     return {"jurisdictions": ranking_jurisdictions(db, s = s, ascending = ascending)}
-
-    

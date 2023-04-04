@@ -7,5 +7,5 @@
 </script>
 
 <Card title={"Behörden"}>
-    <Table data={$ranking.public_bodies} />
+    <Table data={$ranking} />
 </Card>

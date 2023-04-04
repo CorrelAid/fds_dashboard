@@ -11,58 +11,86 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB"<<-EO
 
   CREATE TABLE jurisdictions(
     id INT PRIMARY KEY,
-    name VARCHAR(250),
-    rank INT);
+    name VARCHAR(250)
+    );
   
   COPY jurisdictions
   FROM '/data/jurisdictions.csv'
   DELIMITER ','
   CSV HEADER;
-	
+
   CREATE TABLE public_bodies(
     id INT PRIMARY KEY,
     name VARCHAR(250),
-    classification INT ,
-    categories INT,
-    address VARCHAR(500),
-    jurisdiction INT);
+    jurisdiction_id INT,
+    CONSTRAINT fk_jurisdiction
+      FOREIGN KEY(jurisdiction_id) 
+	      REFERENCES jurisdictions(id)
+        );
   
   COPY public_bodies
   FROM '/data/public_bodies.csv'
   DELIMITER ','
   CSV HEADER;
+
+
+CREATE TABLE campaigns(
+    id INT PRIMARY KEY,
+    name VARCHAR(250),
+    slug VARCHAR(30),
+    start_date TIMESTAMP(6) WITHOUT TIME ZONE,
+    active BOOLEAN);
   
+  COPY campaigns
+  FROM '/data/campaigns.csv'
+  DELIMITER ','
+  CSV HEADER;
+
+
   CREATE TABLE foi_requests(
     id INT PRIMARY KEY,
-    jurisdiction VARCHAR(100),
+    jurisdiction_id INT,
     refusal_reason VARCHAR(750),
     costs DECIMAL,
     due_date TIMESTAMP(6) WITHOUT TIME ZONE,
-    resolved_on TIMESTAMP(6) WITHOUT TIME ZONE,
-    first_message TIMESTAMP(6) WITHOUT TIME ZONE,
+    created_at TIMESTAMP(6) WITHOUT TIME ZONE,
     last_message TIMESTAMP(6) WITHOUT TIME ZONE,
     status VARCHAR(26),
     resolution VARCHAR(26),
-    user_id DECIMAL,
-    public_body_id DECIMAL
+    user_id INT,
+    public_body_id INT,
+    campaign_id INT,
+    CONSTRAINT fk_public_body
+      FOREIGN KEY(public_body_id) 
+	      REFERENCES public_bodies(id),
+    CONSTRAINT fk_jurisdiction
+      FOREIGN KEY(jurisdiction_id) 
+	      REFERENCES jurisdictions(id),
+    CONSTRAINT fk_campaign
+      FOREIGN KEY(campaign_id) 
+	      REFERENCES campaigns(id)
     );
   
-  COPY foi_requests(id, jurisdiction, refusal_reason, costs, due_date, resolved_on, first_message, last_message, status, resolution, user_id, public_body_id)
+  COPY foi_requests
   FROM '/data/foi_requests.csv'
   DELIMITER ','
   CSV HEADER;
-  
+
+
   CREATE TABLE messages(
     id INT PRIMARY KEY,
-    request INT,
+    foi_request_id INT,
     sent BOOLEAN,
     is_response BOOLEAN,
     is_postal BOOLEAN,
     kind VARCHAR(15),
-    sender_public_body DECIMAL,
-    recipient_public_body DECIMAL,
+    sender_public_body_id INT,
+    recipient_public_body_id INT,
     status VARCHAR(20),
-    timestamp TIMESTAMP(6) WITHOUT TIME ZONE
+    timestamp TIMESTAMP(6) WITHOUT TIME ZONE,
+    CONSTRAINT fk_foi_request
+      FOREIGN KEY(foi_request_id) 
+	      REFERENCES foi_requests(id)
     );
 
   COPY messages
