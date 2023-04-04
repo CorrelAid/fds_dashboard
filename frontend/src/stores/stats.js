@@ -42,7 +42,6 @@ export const stats = derived(selected_submit, ($selected_submit, set) => {
     ).then(function (data) {
             console.log($selected_submit)
             const stats = data
-            console.log(data)
             set(stats)
         })
 }, null)

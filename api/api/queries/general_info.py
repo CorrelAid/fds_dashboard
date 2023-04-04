@@ -12,9 +12,9 @@ def drop_down_options(db, table):
     return result
 
 def campaign_start_dates(db):
-    stmt = select(Campaign.id.distinct(), Campaign.start_date).order_by(asc(Campaign.start_date))
+    stmt = select(Campaign.name.distinct(), Campaign.start_date).order_by(asc(Campaign.start_date))
     result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
+    result = [{"xAxis": row[1], "name": row[0]} for row in result]
     return result
 
 

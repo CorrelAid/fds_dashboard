@@ -13,7 +13,7 @@ export const general_info = readable([], function start(set) {
     }
     ).then(function (data) {
         const general_info = data
-        set({ "jurisdictions": general_info.jurisdictions })
+        set(general_info)
     })
 
     return function stop() {

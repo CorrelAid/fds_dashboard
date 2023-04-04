@@ -4,22 +4,31 @@ from models import FoiRequest, PublicBody, Jurisdiction, Campaign, Message
 from sqlalchemy import select, text, MetaData, Table, asc, desc, cast, DECIMAL, Float, literal, case
 from datetime import datetime
 
+def resolved_(db,table,l,s):
+     if l != None and s != None:
+          stmt = select(func.count(table.id).label('value')).where(getattr(table, l) == s).where(FoiRequest.status == "resolved").group_by(FoiRequest.status)
+     else:
+          stmt = select(func.count(table.id).label('value')).where(FoiRequest.status == "resolved").group_by(FoiRequest.status)
+     result = db.execute(stmt).fetchall()
+     result = [tuple(row) for row in result]
+     return result[0][0]
+
 def group_by_count(db, table, column, l, s):
-    if l != None and s != None:
-        # metadata = MetaData()
-        # table2 = Table(table, metadata, autoload=True, autoload_with=db)
-        # column2 = getattr(table2.c, l); getattr(table.columns, l)
-        if l == 'public_body':
-            stmt = select(column, func.count(table.id)).where(table.public_body_id == s).group_by(column)
-        elif l == 'jurisdiction':
-            stmt = select(column, func.count(table.id)).where(table.jurisdiction == s).group_by(column)
-        else:
-             stmt = select(column, func.count(table.id)).where(table.campaign == s).group_by(column)
-    else:
-         stmt = select(column, func.count(table.id)).group_by(column)
-    result = db.execute(stmt).fetchall()
-    result = [{"value": row[1], "name": row[0]} for row in result]
-    return result
+     if l != None and s != None:
+          pre = select(column.label('name'), func.count(table.id).label('value')).where(getattr(table, l) == s).group_by(column).subquery()
+     else:
+          pre = select(column.label('name'), func.count(table.id).label('value')).group_by(column).subquery()
+     
+     if column == FoiRequest.status:
+          stmt = select(pre.c.name, pre.c.value).where(pre.c.name != "resolved")
+     else:
+          stmt=select(pre.c.name, pre.c.value)
+
+     result = db.execute(stmt).fetchall()
+     print(result)
+     result = [{"value": row[1], "name": row[0]} for row in result]
+     
+     return result
 
 def requests_by_month(db, table, column, l, s):
     if l == 'public_body':
@@ -153,14 +162,14 @@ def overall_rates(db, l, s):
 
 def query_stats(db, l, s, ascending = None):
      foi_requests = request_count(db, FoiRequest, l=l, s=s)
-     dist_status = group_by_count(db, FoiRequest, FoiRequest.status, l=l, s=s)
-     resolved = next(item for item in dist_status if item["name"] == "resolved")["value"]
+     resolved = resolved_(db, FoiRequest, l=l, s=s)
 
      return {"foi_requests": foi_requests,
+               "foi_requests_resolved": resolved,
                "foi_requests_not_resolved": foi_requests-resolved,   
                "users": user_count(db, FoiRequest, l=l, s=s),
                "dist_resolution": group_by_count(db, FoiRequest, FoiRequest.resolution, l=l, s=s),
-               "dist_status": dist_status,
+               "dist_status": group_by_count(db, FoiRequest, FoiRequest.status, l=l, s=s),
                "requests_by_month": requests_by_month(db, FoiRequest, FoiRequest.created_at, l=l, s=s),
                "percentage_costs": percentage_costs(db, l=l, s=s),
                "success_rate": overall_rates(db, l=l, s=s)}

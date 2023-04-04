@@ -4,7 +4,9 @@
 
     export let data;
     export let height;
+    export let y_labels = [];
 
+    $: console.log(y_labels);
 
     let el;
     let notMerge = false;
@@ -33,6 +35,19 @@
                     y: "value",
                     tooltip: ["value"],
                 },
+                markLine: {
+                    symbol: "none",
+                    lineStyle: {
+                        color: "#333",
+                        type: "solid",
+                        
+                    },
+                    label:{
+                        show: true,
+                        formatter: '{b}'
+                    },
+                    data: y_labels,
+                },
                 markPoint: {
                     data: [
                         {
@@ -40,12 +55,11 @@
                             show: true,
                             symbol: "circle",
                             symbolSize: 10,
-                            label:{
+                            label: {
                                 position: "top",
                                 fontStyle: "bold",
-                                fontSize: "16"
-                            }
-                            
+                                fontSize: "16",
+                            },
                         },
                     ],
                 },

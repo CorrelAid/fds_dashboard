@@ -4,19 +4,32 @@
 
     export let data;
     export let height;
+
     let el;
+    let notMerge = false;
+    let replaceMerge = undefined;
+    let lazyUpdate = false;
 
     var option = {
+        animation: false,
         tooltip: {
             trigger: "item",
         },
         legend: {
-            top: "5%",
+            bottom: "0%",
             left: "center",
         },
+        dataset: {
+                    // Provide a set of data.
+                    dimensions: ["value", "name"],
+                    source: data,
+                },
         series: [
-            {
-                name: "Access From",
+            {   
+                top: '-10%',
+                left: '-10%',
+                right: '-10%',
+                bottom: '5%',
                 type: "pie",
                 radius: ["40%", "70%"],
                 avoidLabelOverlap: false,
@@ -33,12 +46,7 @@
                 },
                 labelLine: {
                     show: false,
-                },
-                dataset: {
-                    // Provide a set of data.
-                    dimensions: ["value", "name"],
-                    source: data,
-                },
+                }
             },
         ],
     };

@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 class Stats(BaseModel):
     foi_requests: int
+    foi_requests_resolved: int
     foi_requests_not_resolved: int
     users: int
     dist_resolution: List[dict]
@@ -16,6 +17,7 @@ class Stats(BaseModel):
 class GeneralInfo(BaseModel):
     jurisdictions: dict
     public_bodies: dict
+    campaign_starts: List[dict]
   # campaigns: dict
     
 class Ranking(BaseModel):

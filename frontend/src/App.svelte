@@ -1,10 +1,10 @@
 <script>
   import { stats } from "./stores/stats.js";
   import { general_info } from "./stores/general_info.js";
-  import { ranking } from "./stores/ranking.js";
+  // import { ranking } from "./stores/ranking.js";
   import Filter from "./lib/Filter.svelte";
 
-  import A1 from "./lib/A1.svelte";
+  import A from "./lib/A.svelte";
   import A2 from "./lib/A2.svelte";
   import B1 from "./lib/B1.svelte";
   import B2 from "./lib/B2.svelte";
@@ -12,7 +12,6 @@
   import C2 from "./lib/C2.svelte";
   import D1 from "./lib/D1.svelte";
   import D2 from "./lib/D2.svelte";
-  
 </script>
 
 <!-- Before rendering components, subscribe to store (make api call) and check if data is loaded -->
@@ -31,11 +30,8 @@
     <!-- A -->
     <div class="row">
       <div class="col p-3">
-        <A1 />
-      </div>
-      <div class="col p-3">
-        <A2 />
-      </div>
+      <A />
+    </div>
     </div>
     <!-- B -->
     <div class="row">
@@ -58,7 +54,7 @@
   </div>
   <!-- D -->
 {/if}
-{#if $ranking}
+<!-- {#if $ranking}
   <div class="container mt-6 border-blue shadow-blue mb-5">
     <div class="row ranking px-3 py-4">
       <h3 class="">Rankings</h3>
@@ -67,15 +63,15 @@
       <div class="col p-3">
         <D1 />
       </div>
-    </div>
-    <!-- <div class="row ">
+    </div> -->
+<!-- <div class="row ">
       <div class="col p-3">
         <D2 />
       </div>
     </div> -->
-  </div>
-{/if}
+<!-- </div> -->
 
+<!-- {/if} -->
 <style>
   .col {
     padding: 0;
