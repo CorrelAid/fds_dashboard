@@ -8,10 +8,12 @@ from fastapi import FastAPI, status, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import models 
-from schemas import Stats, GeneralInfo, Ranking_public_body, Ranking_jurisdiction
+from schemas import Stats, GeneralInfo, Ranking
 from database import SessionLocal,engine,metadata
-from helpers import generate_model
-from queries import query_general_info, query_stats, query_general_info, query_ranking_jurisdiction, query_ranking_public_body
+from queries.general_info import query_general_info
+from queries.stats import query_stats
+from queries.general_info import query_general_info
+from queries.rankings import query_ranking
 from cache import cache_handler
 
 
@@ -43,17 +45,13 @@ def root(db: Session = Depends(get_db),
 def root(db: Session = Depends(get_db)):
     return cache_handler(db, ascending = None, l = None, s = None, key = "general_info", query_function = query_general_info)
 
-@app.get("/ranking_public_body",response_model=Ranking_public_body)
+@app.get("/ranking",response_model=Ranking)
 def root(db: Session = Depends(get_db),
+         typ: Union[str, None] = Query(default="public_bodies", max_length=15),
          s: Union[str, None] = Query(default='Verspaetungsquote', max_length=25),
          ascending: Union[bool, None] = Query(default = True)):
-    return cache_handler(db, l = None, s = s, ascending = ascending, key = f"ranking_public_body_{s}_{ascending}", query_function = query_ranking_public_body)
+    return cache_handler(db, l = None, s = s, ascending = ascending, key = f"ranking_{typ}_{s}_{ascending}", typ=typ, query_function = query_ranking)
 
-@app.get("/ranking_jurisdiction",response_model=Ranking_jurisdiction)
-def root(db: Session = Depends(get_db),
-         s: Union[str, None] = Query(default='Verspätungsquote', max_length=25),
-         ascending: Union[bool, None] = Query(default = True)):
-    return cache_handler(db, l = None, s = s, key = f"ranking_jurisdiction_{s}_{ascending}", query_function = query_ranking_jurisdiction)
 
 
 # def start():

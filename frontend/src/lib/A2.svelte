@@ -1,5 +1,5 @@
 <script>
-  import Balken from "./charts/Balken.svelte";
+  import Donut from "./charts/Donut.svelte";
   import { stats } from "../stores/stats.js";
   import Card from "./Card.svelte";
   let data;
@@ -13,6 +13,6 @@
   <span class="h4">{data.stats_success_rate}%</span> erfolgreich.</p>
 <p>Die restlichen Anfragen endeten folgendermaßen:</p>
 </div> -->
-<Balken data = {$stats.dist_resolution}  height={400}/>
+<!-- <Donut data = {$stats.dist_resolution}  height={400}/> -->
 </Card>
 

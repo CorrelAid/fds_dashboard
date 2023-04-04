@@ -2,6 +2,10 @@
 # FDS Statistics API
 
 ```
+print(str(stmt.compile(dialect=postgresql.dialect(),compile_kwargs={"literal_binds": True})))
+```
+
+```
 ├── Dockerfile ---------- Used for container setup
 ├── kn_fds_statistics_api ---------- All python code aka the package
 │   ├── database.py ---------- Establishs connection to the db
