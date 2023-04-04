@@ -47,8 +47,8 @@ def pp_requests():
     df.loc[df.campaign_id==8, "campaign_id"] = pd.NA
     df.loc[df.campaign_id==7, "campaign_id"] = pd.NA
 
-
-
+    # only keeping foi requests younger than first of august 2011
+    df = df.loc[(df['created_at'] > '2011-08-01T00:00:13.000000+00:00')]
 
     # making sure df only contains integer NAs
     df = df.fillna(pd.NA)
