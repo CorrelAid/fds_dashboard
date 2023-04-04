@@ -5,6 +5,6 @@
 </script>
 
 <Card title={"Wie teuer sind Anfragen?"}>
-    <p>Die Kosten, die <span class="h4">{formatAsPercent($stats.stats_percentage_costs)}</span> der Anfragen generieren, verteilen sich folgendermaßen:</p>
+    <p>Die Kosten, die <span class="h4">{formatAsPercent($stats.percentage_costs)}</span> der Anfragen generieren, verteilen sich folgendermaßen:</p>
 </Card>
 

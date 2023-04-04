@@ -8,9 +8,9 @@
 <p>Von den <span class="h4">{$stats.foi_requests_not_resolved}</span> Anfragen, die aktuell bearbeitet werden,</p>
 
 <ul>
-    <li> warten <span class="h4">{$stats.stats_dist_status.overdue}</span> noch auf eine Antwort.</li>
-    <li> sind <span class="h4">{$stats.stats_dist_status.awaiting_response}</span> über der Frist.</li>
-    <li> sind <span class="h4">{$stats.stats_dist_status.asleep}</span> eingeschlafen.</li>
+    <li> warten <span class="h4">{$stats.dist_status.overdue}</span> noch auf eine Antwort.</li>
+    <li> sind <span class="h4">{$stats.dist_status.awaiting_response}</span> über der Frist.</li>
+    <li> sind <span class="h4">{$stats.dist_status.asleep}</span> eingeschlafen.</li>
 </ul>
 
 <p>Omitted "awaiting_classification", "publicbody_needed", "awaiting_user_confirmation"</p>
