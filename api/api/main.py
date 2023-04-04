@@ -37,21 +37,23 @@ def get_db():
 def root(db: Session = Depends(get_db),
          l: Union[str, None] = Query(default=None, max_length=15),
          s: Union[int, str, None] = Query(default=None)):
-    return cache_handler(db = db, l = l, s=s, key =  f"stats_{l}_{s}", query_function = query_stats)
+    return cache_handler(db = db, l = l, s = s, ascending = None, key =  f"stats_{l}_{s}", query_function = query_stats)
 
 @app.get("/general_info",response_model=GeneralInfo)
 def root(db: Session = Depends(get_db)):
-    return cache_handler(db, l = None, s= None, key = "general_info", query_function = query_general_info)
+    return cache_handler(db, ascending = None, l = None, s = None, key = "general_info", query_function = query_general_info)
 
 @app.get("/ranking_public_body",response_model=Ranking_public_body)
 def root(db: Session = Depends(get_db),
-         s: Union[str, None] = Query(default='Verspätungsquote', max_length=25)):
-    return cache_handler(db, l = None, s= s, key = f"ranking_public_body_{s}", query_function = query_ranking_public_body)
+         s: Union[str, None] = Query(default='Verspaetungsquote', max_length=25),
+         ascending: Union[bool, None] = Query(default = True)):
+    return cache_handler(db, l = None, s = s, ascending = ascending, key = f"ranking_public_body_{s}_{ascending}", query_function = query_ranking_public_body)
 
 @app.get("/ranking_jurisdiction",response_model=Ranking_jurisdiction)
 def root(db: Session = Depends(get_db),
-         s: Union[str, None] = Query(default='Verspätungsquote', max_length=25)):
-    return cache_handler(db, l = None, s= s, key = f"ranking_jurisdiction_{s}", query_function = query_ranking_jurisdiction)
+         s: Union[str, None] = Query(default='Verspätungsquote', max_length=25),
+         ascending: Union[bool, None] = Query(default = True)):
+    return cache_handler(db, l = None, s = s, key = f"ranking_jurisdiction_{s}_{ascending}", query_function = query_ranking_jurisdiction)
 
 
 # def start():
