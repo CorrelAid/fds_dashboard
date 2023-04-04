@@ -12,14 +12,14 @@ def cache_handler(db, key, query_function, **kwargs):
     cache_key = key
     cache_entry = r.get(cache_key)
 
-    if cache_entry:
-        print("using cache")
-        return json.loads(cache_entry)
-    else:
-        print("using db")
-        query_result = query_function(db = db, **kwargs)
-        print(query_result)
-        r.set(cache_key, json.dumps(query_result, indent=4, sort_keys=False, default=str))
-        r.expire(cache_key, 60*60*12)
-        return query_result
+    # if cache_entry:
+    #     print("using cache")
+    #     return json.loads(cache_entry)
+    # else:
+    print("using db")
+    query_result = query_function(db = db, **kwargs)
+    print(query_result)
+    r.set(cache_key, json.dumps(query_result, indent=4, sort_keys=False, default=str))
+    r.expire(cache_key, 60*60*12)
+    return query_result
 
