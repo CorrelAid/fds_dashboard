@@ -18,7 +18,7 @@ def group_by_count(db, table, column, l, s):
     else:
          stmt = select(column, func.count(table.id)).group_by(column)
     result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
+    result = [{"value": row[1], "name": row[0]} for row in result]
     return result
 
 def requests_by_month(db, table, column, l, s):
@@ -37,11 +37,13 @@ def requests_by_month(db, table, column, l, s):
          .group_by(func.date_trunc("month", column))\
          .order_by(func.date_trunc("month", column))
     result = db.execute(stmt).fetchall()
-#     for row in result:
-#      print(row[0])
-    result = [{"value": row[1], "name": row[0]} for row in result]
-#     print(result)
-    return result
+    lst = []
+    value = 0
+    for row in result:
+          value += row[1]
+          obj = {"value": value, "name": row[0]}
+          lst.append(obj)
+    return lst
 
 def user_count(db, table, l, s):
      if l == 'public_body':
@@ -150,10 +152,15 @@ def overall_rates(db, l, s):
     return dct
 
 def query_stats(db, l, s, ascending = None):
-    return {"foi_requests": request_count(db, FoiRequest, l=l, s=s),
-            "users": user_count(db, FoiRequest, l=l, s=s),
-            "dist_resolution": group_by_count(db, FoiRequest, FoiRequest.resolution, l=l, s=s),
-            "dist_status": group_by_count(db, FoiRequest, FoiRequest.status, l=l, s=s),
-            "requests_by_month": requests_by_month(db, FoiRequest, FoiRequest.created_at, l=l, s=s),
-            "percentage_costs": percentage_costs(db, l=l, s=s),
-            "success_rate": overall_rates(db, l=l, s=s)}
+     foi_requests = request_count(db, FoiRequest, l=l, s=s)
+     dist_status = group_by_count(db, FoiRequest, FoiRequest.status, l=l, s=s)
+     resolved = next(item for item in dist_status if item["name"] == "resolved")["value"]
+
+     return {"foi_requests": foi_requests,
+               "foi_requests_not_resolved": foi_requests-resolved,   
+               "users": user_count(db, FoiRequest, l=l, s=s),
+               "dist_resolution": group_by_count(db, FoiRequest, FoiRequest.resolution, l=l, s=s),
+               "dist_status": dist_status,
+               "requests_by_month": requests_by_month(db, FoiRequest, FoiRequest.created_at, l=l, s=s),
+               "percentage_costs": percentage_costs(db, l=l, s=s),
+               "success_rate": overall_rates(db, l=l, s=s)}

@@ -5,9 +5,10 @@ from collections import OrderedDict
 
 class Stats(BaseModel):
     foi_requests: int
+    foi_requests_not_resolved: int
     users: int
-    dist_resolution: dict
-    dist_status: dict
+    dist_resolution: List[dict]
+    dist_status: List[dict]
     requests_by_month: List[dict]
     percentage_costs: float
     success_rate: dict
