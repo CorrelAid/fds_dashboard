@@ -10,6 +10,7 @@ class Stats(BaseModel):
     stats_dist_status: dict
     stats_requests_by_month: dict
     stats_percentage_costs: float
+    stats_success_rate: dict
 
 class GeneralInfo(BaseModel):
     jurisdictions: dict
