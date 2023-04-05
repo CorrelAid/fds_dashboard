@@ -77,10 +77,7 @@ def percentage_costs(db, l, s):
          not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(getattr(FoiRequest, l) == s).subquery()
          stmt = select(func.count(not_free.c.id.distinct())/(cast(func.count(FoiRequest.id.distinct()), Float))*100)\
                   .join(not_free, not_free.c.id ==FoiRequest.id, isouter=True).where(getattr(FoiRequest, l) == s)
-       #  else:
-        #      not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(FoiRequest.jurisdiction == s).subquery()
-         #     stmt = select(func.count(not_free.c.id.distinct())/(cast(func.count(FoiRequest.id.distinct()), Float))*100)\
-          #        .join(not_free, not_free.c.id ==FoiRequest.id, isouter=True).where(FoiRequest.jurisdiction == s)
+
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
     return result[0][0]
@@ -135,7 +132,7 @@ def overall_rates(db, l, s):
          stmt =  select(func.count(FoiRequest.id.distinct()).label('Anzahl'), cast(func.count(resolved_mess.c.foi_request_id), Float).label('Anzahl_Erfolgreich'), cast(func.count(late.c.id), Float).label('Fristueberschreitungen'))\
                   .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)\
                   .join(late, late.c.id == FoiRequest.id, isouter=True)\
-                  .where(FoiRequest.campaign == s)
+                  .where(FoiRequest.campaign_id == s)
          
          final = select(stmt.c.Anzahl.label('Anzahl'), (stmt.c.Anzahl_Erfolgreich / stmt.c.Anzahl * 100).label('Erfolgsquote'), stmt.c.Fristueberschreitungen, (stmt.c.Fristueberschreitungen / stmt.c.Anzahl * 100).label('Verspätungsquote'))
    
