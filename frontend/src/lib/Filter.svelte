@@ -13,7 +13,12 @@
 
     function set_url_params(selected){
         if (selected!=null){
-            $url_params = `?l=${$category}&s=${selected}`
+            const tr = {
+                "jurisdictions":"jurisdiction_id",
+                "public_bodies":"public_body_id",
+                "campaigns":"campaign_id",
+            }
+            $url_params = `?l=${tr[$category]}&s=${selected}`
         }
         else{
             $url_params = ""
@@ -37,7 +42,7 @@
                                 ? 'active'
                                 : ''}"
                             on:click={() => {
-                                ($category = "public_bodies"), (selected = "");
+                                ($category = "public_bodies"), (selected = ""), ($term = "");
                             }}>Behörden</button
                         >
                     </li>
@@ -47,7 +52,7 @@
                                 ? 'active'
                                 : ''}"
                             on:click={() => {
-                                ($category = "jurisdictions"), (selected = "");
+                                ($category = "jurisdictions"), (selected = ""), ($term = "");
                             }}>Jurisdiktionen</button
                         >
                     </li>
@@ -57,7 +62,7 @@
                                 ? 'active'
                                 : ''}"
                             on:click={() => {
-                                ($category = "campaigns"), (selected = "");
+                                ($category = "campaigns"), (selected = ""), ($term = "");
                             }}>Kampagnen</button
                         >
                     </li>
@@ -116,15 +121,15 @@
                     <span
                         class="dropdown-item"
                         on:click={() => {
-                            (selected = null), (show = "");
+                            (selected = null), (show = ""), ($term = "");
                         }}>Alle</span
                     >
                     {#each $filtered as item}
                     <span
                         class="dropdown-item"
                         on:click={() => {
-                            (selected = item), (show = ""), ($term = item);
-                        }}>{item}</span
+                            (selected = item.id), (show = ""), ($term = item.name);
+                        }}>{item.name}</span
                     >
                     {/each}
                 </div>

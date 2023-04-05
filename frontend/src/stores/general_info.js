@@ -28,9 +28,14 @@ export const category = writable('public_bodies');
 export const filtered = derived(
     [term, general_info, category], ([$term, $general_info, $category], set) => {
         if (_.isEmpty($general_info) === false) {
-            let lst = Object.values($general_info[$category])
+            let lst = $general_info[$category]
             // let result = _.find(songs, {id});
-            let result = lst.filter(x => x.includes($term))
+            console.log($term)
+            let result = _.filter(lst, function(o) { 
+                return o.name.includes($term); 
+             });
+            // let result = lst.filter(x => x.includes($term))
+            console.log(result)
             set(result.slice(0, 10))
         }
 
