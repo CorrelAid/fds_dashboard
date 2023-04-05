@@ -1,7 +1,6 @@
 <script>
   import { stats } from "./stores/stats.js";
   import { general_info } from "./stores/general_info.js";
-  // import { ranking } from "./stores/ranking.js";
   import Filter from "./lib/Filter.svelte";
 
   import A from "./lib/A.svelte";
@@ -36,25 +35,30 @@
     <!-- B -->
     <div class="row">
       <div class="col p-3">
-        <B1 />
+        <A2 />
       </div>
       <div class="col p-3">
-        <B2 />
+        <B1 />
       </div>
     </div>
     <!-- C -->
     <div class="row">
       <div class="col p-3">
+        <B2 />
+      </div>
+      <div class="col p-3">
         <C1 />
       </div>
+    </div>
+    <div class="row">
       <div class="col p-3">
         <C2 />
       </div>
     </div>
   </div>
-  <!-- D -->
+  
 {/if}
-<!-- {#if $ranking}
+<!-- D -->
   <div class="container mt-6 border-blue shadow-blue mb-5">
     <div class="row ranking px-3 py-4">
       <h3 class="">Rankings</h3>
@@ -63,15 +67,14 @@
       <div class="col p-3">
         <D1 />
       </div>
-    </div> -->
-<!-- <div class="row ">
+    </div> 
+<div class="row ">
       <div class="col p-3">
         <D2 />
       </div>
-    </div> -->
-<!-- </div> -->
+    </div>
+</div>
 
-<!-- {/if} -->
 <style>
   .col {
     padding: 0;

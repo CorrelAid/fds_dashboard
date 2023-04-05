@@ -2,7 +2,7 @@
   export let data;
   import { formatAsPercent } from "../helpers/formatting";
 
-  // $: console.log(data)
+  $: console.log(data)
 
 
 </script>
@@ -18,7 +18,7 @@
     </tr>
   </thead>
   <tbody>
-    {#each data.public_bodies as row,i}
+    {#each data as row,i}
     <tr>
       <th scope="row">{i+1}</th>
       <td>{row.name}</td>

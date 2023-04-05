@@ -3,7 +3,7 @@
     import Lense from "./svg/Lense.svelte";
     import Dropdown from "./svg/Dropdown.svelte";
     import { selected_submit } from "../stores/stats.js";
-    export let jurisdictions = [];
+    import { general_info } from "../stores/general_info.js";
     let type = "public_body";
     let show = "";
     let selected = null;
