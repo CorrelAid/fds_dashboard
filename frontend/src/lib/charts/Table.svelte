@@ -2,7 +2,6 @@
   export let data;
   import { formatAsPercent } from "../helpers/formatting";
 
-  $: console.log(data)
 
 
 </script>

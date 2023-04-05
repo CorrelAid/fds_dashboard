@@ -7,8 +7,8 @@ from datetime import datetime
 def drop_down_options(db, table):
     stmt = select(table.id.distinct(), table.name).order_by(asc(table.name))
     result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
-    print(result)
+    result = [{"id":row[0], "name":row[1]} for row in result]
+    
     return result
 
 def campaign_start_dates(db):

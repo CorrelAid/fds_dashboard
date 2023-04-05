@@ -1,6 +1,5 @@
 <script>
-  import { stats } from "./stores/stats.js";
-  import { general_info } from "./stores/general_info.js";
+  import { stats } from "./stores/stats.js";;
   import Filter from "./lib/Filter.svelte";
 
   import A from "./lib/A.svelte";
@@ -23,7 +22,7 @@
   <div class="container border-blue shadow-blue">
     <div class="row">
       <div class="col">
-        <Filter jurisdictions={$general_info.jurisdictions} />
+        <Filter />
       </div>
     </div>
     <!-- A -->

@@ -6,7 +6,6 @@
     export let height;
     export let y_labels = [];
 
-    $: console.log(y_labels);
 
     let el;
     let notMerge = false;

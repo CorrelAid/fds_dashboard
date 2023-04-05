@@ -2,15 +2,25 @@
     import { clickOutside } from "./helpers/clickOutside";
     import Lense from "./svg/Lense.svelte";
     import Dropdown from "./svg/Dropdown.svelte";
-    import { selected_submit } from "../stores/stats.js";
-    import { general_info } from "../stores/general_info.js";
-    let type = "public_body";
+    import { url_params } from "../stores/stats.js";
+    import { term,category,filtered } from "../stores/general_info.js";
     let show = "";
     let selected = null;
 
     const toggle = () => {
         show == "" ? (show = "show") : (show = "");
     };
+
+    function set_url_params(selected){
+        if (selected!=null){
+            $url_params = `?l=${$category}&s=${selected}`
+        }
+        else{
+            $url_params = ""
+        }
+    }
+
+    
 </script>
 
 <div class="container">
@@ -19,35 +29,35 @@
             <div class="d-flex justify-content-center align-items-center pt-4">
                 <ul class="nav nav-pills">
                     <!-- <li class="nav-item">
-                      <button class="nav-link {type=="all"?"active":""}" on:click={()=> {type="all"}}>Alle</button>
+                      <button class="nav-link {$category=="all"?"active":""}" on:click={()=> {$category="all"}}>Alle</button>
                     </li> -->
                     <li class="nav-item">
                         <button
-                            class="nav-link  {type == 'public_body'
+                            class="nav-link  {$category == 'public_bodies'
                                 ? 'active'
                                 : ''}"
                             on:click={() => {
-                                (type = "public_body"), (selected = "");
+                                ($category = "public_bodies"), (selected = "");
                             }}>Behörden</button
                         >
                     </li>
                     <li class="nav-item">
                         <button
-                            class="nav-link {type == 'jurisdiction'
+                            class="nav-link {$category == 'jurisdictions'
                                 ? 'active'
                                 : ''}"
                             on:click={() => {
-                                (type = "jurisdiction"), (selected = "");
+                                ($category = "jurisdictions"), (selected = "");
                             }}>Jurisdiktionen</button
                         >
                     </li>
                     <li class="nav-item">
                         <button
-                            class="nav-link {type == 'campaign'
+                            class="nav-link {$category == 'campaigns'
                                 ? 'active'
                                 : ''}"
                             on:click={() => {
-                                (type = "campaign"), (selected = "");
+                                ($category = "campaigns"), (selected = "");
                             }}>Kampagnen</button
                         >
                     </li>
@@ -75,26 +85,26 @@
                     <input
                         type="text"
                         class="search"
-                        aria-disabled={type === "all" ? "true" : "false"}
-                        placeholder={type === "all"
+                        aria-disabled={$category === "all" ? "true" : "false"}
+                        placeholder={$category === "all"
                             ? "Kategorie auswählen..."
                             : "Suchen..."}
-                        on:focus={show === "" && type !== "all"
+                        on:focus={show === "" && $category !== "all"
                             ? toggle()
                             : null}
-                        bind:value={selected}
+                        bind:value={$term}
                     />
                     <span
                         class="bg-white h-100 d-flex justify-content-center align-items-center"
                         on:click={() => {
-                            type !== "all" ? toggle() : null;
+                            $category !== "all" ? toggle() : null;
                         }}
                     >
                         <Dropdown height={22} width={30} />
                     </span>
                     <button
                         type="button"
-                        class="btn fw-normal btn-primary ms-3 h-100 d-flex justify-content-center align-items-center " on:click={()=>{$selected_submit=selected}}
+                        class="btn fw-normal btn-primary ms-3 h-100 d-flex justify-content-center align-items-center " on:click={()=>{set_url_params(selected)}}
                         >Anzeigen</button
                     >
                 </div>
@@ -109,12 +119,14 @@
                             (selected = null), (show = "");
                         }}>Alle</span
                     >
+                    {#each $filtered as item}
                     <span
                         class="dropdown-item"
                         on:click={() => {
-                            (selected = "test"), (show = "");
-                        }}>Test</span
+                            (selected = item), (show = ""), ($term = item);
+                        }}>{item}</span
                     >
+                    {/each}
                 </div>
             </div>
         </div>

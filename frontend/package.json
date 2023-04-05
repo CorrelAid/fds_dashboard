@@ -23,6 +23,7 @@
     "bootstrap": "^5.2.0",
     "dotenv": "^16.0.1",
     "echarts": "^5.4.0",
+    "lodash": "^4.17.21",
     "uninstall": "^0.0.0"
   }
 }

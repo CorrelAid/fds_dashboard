@@ -15,8 +15,8 @@ class Stats(BaseModel):
     success_rate: dict
 
 class GeneralInfo(BaseModel):
-    jurisdictions: dict
-    public_bodies: dict
+    jurisdictions: List[dict]
+    public_bodies: List[dict]
     campaign_starts: List[dict]
   # campaigns: dict
     
