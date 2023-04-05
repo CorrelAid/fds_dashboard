@@ -11,14 +11,9 @@ def drop_down_options(db, table):
     
     return result
 
-def campaign_start_dates(db):
-    stmt = select(Campaign.name.distinct(), Campaign.start_date).order_by(asc(Campaign.start_date))
-    result = db.execute(stmt).fetchall()
-    result = [{"xAxis": row[1], "name": row[0]} for row in result]
-    return result
+
 
 
 def query_general_info(db, l = None, s = None, ascending = None):
     return {"jurisdictions": drop_down_options(db, Jurisdiction),
-            "public_bodies": drop_down_options(db, PublicBody),
-            "campaign_starts": campaign_start_dates(db)}
+            "public_bodies": drop_down_options(db, PublicBody)}

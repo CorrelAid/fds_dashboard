@@ -11,6 +11,7 @@ def resolved_(db,table,l,s):
           stmt = select(func.count(table.id).label('value')).where(FoiRequest.status == "resolved").group_by(FoiRequest.status)
      result = db.execute(stmt).fetchall()
      result = [tuple(row) for row in result]
+     print(result)
      return result[0][0]
 
 def group_by_count(db, table, column, l, s):
@@ -31,14 +32,9 @@ def group_by_count(db, table, column, l, s):
      return result
 
 def requests_by_month(db, table, column, l, s):
-    if l == 'public_body':
-            stmt = select(func.date_trunc("month", column), func.count(table.id))\
-            .where(table.public_body_id == s)\
-            .group_by(func.date_trunc("month", column))\
-            .order_by(func.date_trunc("month", column))
-    elif l == 'jurisdiction':
-         stmt = select(func.date_trunc("month", column), func.count(table.id))\
-            .where(table.jurisdiction == s)\
+    if l != None and s != None:
+          stmt = select(func.date_trunc("month", column), func.count(table.id))\
+            .where(getattr(table, l) == s)\
             .group_by(func.date_trunc("month", column))\
             .order_by(func.date_trunc("month", column))         
     else:
@@ -55,10 +51,8 @@ def requests_by_month(db, table, column, l, s):
     return lst
 
 def user_count(db, table, l, s):
-     if l == 'public_body':
-          stmt = select(func.count(table.user_id.distinct())).where(table.public_body_id == s)
-     elif l == 'jurisdiction':
-          stmt = select(func.count(table.user_id.distinct())).where(table.jurisdiction == s)
+     if l != None and s != None:
+          stmt = select(func.count(table.user_id.distinct())).where(getattr(table, l) == s)
      else:
           stmt = select(func.count(table.user_id.distinct()))
      result = db.execute(stmt).fetchall()
@@ -66,10 +60,8 @@ def user_count(db, table, l, s):
      return result[0][0]
 
 def request_count(db, table, l, s):
-     if l == 'public_body':
-          stmt = select(func.count(table.id.distinct())).where(table.public_body_id == s)
-     elif l == 'jurisdiction':
-        stmt = select(func.count(table.id.distinct())).where(table.jurisdiction == s)
+     if l != None and s != None:
+        stmt = select(func.count(table.id.distinct())).where(getattr(table, l) == s)
      else:
           stmt = select(func.count(table.id.distinct()))
      result = db.execute(stmt).fetchall()
@@ -82,14 +74,13 @@ def percentage_costs(db, l, s):
          stmt = select(func.count(not_free.c.id.distinct())/(cast(func.count(FoiRequest.id.distinct()), Float))*100)\
                   .join(not_free, not_free.c.id ==FoiRequest.id, isouter=True)
     else:
-         if l == 'public_body':
-              not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(FoiRequest.public_body_id == s).subquery()
-              stmt = select(func.count(not_free.c.id.distinct())/(cast(func.count(FoiRequest.id.distinct()), Float))*100)\
-                  .join(not_free, not_free.c.id ==FoiRequest.id, isouter=True).where(FoiRequest.public_body_id == s)
-         else:
-              not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(FoiRequest.jurisdiction == s).subquery()
-              stmt = select(func.count(not_free.c.id.distinct())/(cast(func.count(FoiRequest.id.distinct()), Float))*100)\
-                  .join(not_free, not_free.c.id ==FoiRequest.id, isouter=True).where(FoiRequest.jurisdiction == s)
+         not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(getattr(FoiRequest, l) == s).subquery()
+         stmt = select(func.count(not_free.c.id.distinct())/(cast(func.count(FoiRequest.id.distinct()), Float))*100)\
+                  .join(not_free, not_free.c.id ==FoiRequest.id, isouter=True).where(getattr(FoiRequest, l) == s)
+       #  else:
+        #      not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(FoiRequest.jurisdiction == s).subquery()
+         #     stmt = select(func.count(not_free.c.id.distinct())/(cast(func.count(FoiRequest.id.distinct()), Float))*100)\
+          #        .join(not_free, not_free.c.id ==FoiRequest.id, isouter=True).where(FoiRequest.jurisdiction == s)
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
     return result[0][0]
@@ -125,7 +116,7 @@ def overall_rates(db, l, s):
     
          final = select(stmt.c.Anzahl.label('Anzahl'), (stmt.c.Anzahl_Erfolgreich / stmt.c.Anzahl * 100).label('Erfolgsquote'), stmt.c.Fristueberschreitungen, (stmt.c.Fristueberschreitungen / stmt.c.Anzahl * 100).label('Verspätungsquote'))
    
-    elif l == 'public_body':
+    elif l == 'public_body_id':
          stmt =  select(func.count(FoiRequest.id.distinct()).label('Anzahl'), cast(func.count(resolved_mess.c.foi_request_id), Float).label('Anzahl_Erfolgreich'), cast(func.count(late.c.id), Float).label('Fristueberschreitungen'))\
                   .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)\
                   .join(late, late.c.id == FoiRequest.id, isouter=True)\
@@ -133,12 +124,11 @@ def overall_rates(db, l, s):
          
          final = select(stmt.c.Anzahl.label('Anzahl'), (stmt.c.Anzahl_Erfolgreich / stmt.c.Anzahl * 100).label('Erfolgsquote'), stmt.c.Fristueberschreitungen, (stmt.c.Fristueberschreitungen / stmt.c.Anzahl * 100).label('Verspätungsquote'))
 
-    elif l == 'jurisdiction':
-         print('here')
+    elif l == 'jurisdiction_id':
          stmt =  select(func.count(FoiRequest.id.distinct()).label('Anzahl'), cast(func.count(resolved_mess.c.foi_request_id), Float).label('Anzahl_Erfolgreich'), cast(func.count(late.c.id), Float).label('Fristueberschreitungen'))\
                   .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)\
                   .join(late, late.c.id == FoiRequest.id, isouter=True)\
-                  .where(FoiRequest.jurisdiction == s)
+                  .where(FoiRequest.jurisdiction_id == s)
          
          final = select(stmt.c.Anzahl.label('Anzahl'), (stmt.c.Anzahl_Erfolgreich / stmt.c.Anzahl * 100).label('Erfolgsquote'), stmt.c.Fristueberschreitungen, (stmt.c.Fristueberschreitungen / stmt.c.Anzahl * 100).label('Verspätungsquote'))
     else:

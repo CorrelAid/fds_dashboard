@@ -17,11 +17,13 @@ class Stats(BaseModel):
 class GeneralInfo(BaseModel):
     jurisdictions: List[dict]
     public_bodies: List[dict]
-    campaign_starts: List[dict]
   # campaigns: dict
     
 class Ranking(BaseModel):
     ranking: List[dict]
+
+class CampaignStarts(BaseModel):
+    campaign_starts: List[dict]
 
 
 
