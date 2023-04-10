@@ -11,9 +11,7 @@ def drop_down_options(db, table):
     
     return result
 
-
-
-
 def query_general_info(db, l = None, s = None, ascending = None):
     return {"jurisdictions": drop_down_options(db, Jurisdiction),
-            "public_bodies": drop_down_options(db, PublicBody)}
+            "public_bodies": drop_down_options(db, PublicBody),
+            "campaigns": drop_down_options(db, Campaign)}

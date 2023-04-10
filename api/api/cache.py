@@ -22,4 +22,3 @@ def cache_handler(db, key, query_function, **kwargs):
     r.set(cache_key, json.dumps(query_result, indent=4, sort_keys=False, default=str))
     r.expire(cache_key, 60*60*12)
     return query_result
-

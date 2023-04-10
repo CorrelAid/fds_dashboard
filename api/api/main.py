@@ -8,13 +8,14 @@ from fastapi import FastAPI, status, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import models 
-from schemas import Stats, GeneralInfo, Ranking, CampaignStarts
+from schemas import Stats, GeneralInfo, Ranking, CampaignStarts, Reaction
 from database import SessionLocal,engine,metadata
 from queries.general_info import query_general_info
 from queries.stats import query_stats
 from queries.general_info import query_general_info
 from queries.rankings import query_ranking
 from queries.campaign_starts import query_campaign_starts
+from queries.reaction import query_reaction_time
 from cache import cache_handler
 
 
@@ -56,6 +57,13 @@ def root(db: Session = Depends(get_db),
 @app.get("/campaign_starts", response_model=CampaignStarts)
 def root(db: Session = Depends(get_db)):
     return cache_handler(db, key = "campaign_starts", query_function = query_campaign_starts)
+
+@app.get("/reaction_time",response_model=Reaction)
+def root(db: Session = Depends(get_db),
+         typ: Union[str, None] = Query(default=None, max_length=15),
+         s: Union[int, str, None] = Query(default=None)):
+    return cache_handler(db = db, typ = typ, s = s, l = None, ascending = None, key =  f"stats_{typ}_{s}", query_function = query_reaction_time)
+
 
 
 
