@@ -84,7 +84,7 @@ def percentage_costs(db, l, s):
 
 def overall_rates(db, l, s):
     resolved_mess = select(Message.foi_request_id.distinct().label('foi_request_id'))\
-                           .where(Message.status == 'resolved').subquery()
+                           .filter(Message.status.in_(['resolved', 'partially_successful', 'successful'])).subquery()
 
     res_date = select(Message.foi_request_id, func.min(Message.timestamp))\
                       .filter(Message.foi_request_id.in_(resolved_mess))\
