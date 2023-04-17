@@ -7,19 +7,21 @@ from sqlalchemy.dialects import postgresql
 
 def ranking(db):
     total_num = select(FoiRequest.public_body_id, func.count(FoiRequest.id.distinct()))\
-                        .where(FoiRequest.public_body_id != None)\
-                        .group_by(FoiRequest.public_body_id).subquery()
+                       .where(FoiRequest.public_body_id != None)\
+                       .where(FoiRequest.campaign_id != 9)\
+                       .group_by(FoiRequest.public_body_id).subquery()
 
     resolved_mess = select(Message.foi_request_id.distinct())\
-                           .where(Message.status == 'resolved').subquery()
+                           .filter(Message.status.in_(['resolved', 'partially_successful', 'successful'])).subquery()
 
     resolved = select(FoiRequest.public_body_id, func.count(FoiRequest.id.distinct()))\
                       .where(FoiRequest.public_body_id != None)\
+                      .where(FoiRequest.campaign_id != 9)\
                       .filter(FoiRequest.id.in_(resolved_mess))\
                       .group_by(FoiRequest.public_body_id).subquery()
 
     res_date = select(Message.foi_request_id, func.min(Message.timestamp))\
-                      .where(Message.status == 'resolved')\
+                      .filter(Message.status.in_(['resolved', 'partially_successful', 'successful']))\
                       .group_by(Message.foi_request_id).subquery()
 
     unres = select(Message.foi_request_id, func.max(Message.timestamp))\
@@ -28,10 +30,12 @@ def ranking(db):
     
     late_res = select(FoiRequest.id)\
                       .join(res_date, FoiRequest.id == res_date.c.foi_request_id)\
+                      .where(FoiRequest.campaign_id != 9)\
                       .where(FoiRequest.due_date < res_date.c.min).subquery()
 
     late_unres = select(FoiRequest.id)\
                       .join(unres, FoiRequest.id == unres.c.foi_request_id)\
+                      .where(FoiRequest.campaign_id != 9)\
                       .where(FoiRequest.due_date < unres.c.max).subquery()
     
     late_all = select(func.coalesce(late_res.c.id, late_unres.c.id).label('id'))\
@@ -127,19 +131,18 @@ def ranking_jurisdictions(db, s: str, ascending: bool):
     return lst
 
 def ranking_campaign(db, s: str, ascending: bool):
-      #                       .where(FoiRequest.public_body_id != 10)\
      total_num = select(FoiRequest.campaign_id, func.count(FoiRequest.id.distinct()))\
                         .group_by(FoiRequest.campaign_id).subquery()
 
      resolved_mess = select(Message.foi_request_id.distinct())\
-                           .where(Message.status == 'resolved').subquery()
+                           .filter(Message.status.in_(['resolved', 'partially_successful', 'successful'])).subquery()
 
      resolved = select(FoiRequest.campaign_id, func.count(FoiRequest.id.distinct()))\
                       .filter(FoiRequest.id.in_(resolved_mess))\
                       .group_by(FoiRequest.campaign_id).subquery()
 
      res_date = select(Message.foi_request_id, func.min(Message.timestamp))\
-                      .where(Message.status == 'resolved')\
+                      .filter(Message.status.in_(['resolved', 'partially_successful', 'successful']))\
                       .group_by(Message.foi_request_id).subquery()
 
      unres = select(Message.foi_request_id, func.max(Message.timestamp))\
