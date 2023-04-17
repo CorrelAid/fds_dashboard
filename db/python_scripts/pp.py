@@ -180,7 +180,6 @@ def pp_messages(id_lst):
     
     df = df.query(f'foi_request_id in {id_lst}')
     
-
     # saving as csv
     with Status("Saving as csv...") as status:
         df.to_csv("../postgres/data/messages.csv", index=False)
