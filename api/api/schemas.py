@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from pydantic.schema import Optional, List
 from datetime import datetime, timedelta
-from dateutil import relativedelta
 from collections import OrderedDict
 
 class Stats(BaseModel):
