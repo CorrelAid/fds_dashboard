@@ -137,8 +137,6 @@ def overall_rates(db, l, s):
          final = select(stmt.c.Anzahl.label('Anzahl'), (stmt.c.Anzahl_Erfolgreich / stmt.c.Anzahl * 100).label('Erfolgsquote'), stmt.c.Fristueberschreitungen, (stmt.c.Fristueberschreitungen / stmt.c.Anzahl * 100).label('Verspätungsquote'))
    
     result = db.execute(final).fetchall()
-    print("result: ")
-    print(result)
     dct = {}
 
     dct["number"] = float(result[0][0])
