@@ -1,5 +1,8 @@
 <script>
-  import { stats } from "./stores/stats.js";;
+  import { stats } from "./stores/stats.js";
+  import { ranking_public_bodies } from "./stores/ranking_public_bodies.js";
+  import { ranking_jurisdictions } from "./stores/ranking_jurisdictions.js";
+  import { campaign_starts } from "./stores/campaign_starts.js";
   import Filter from "./lib/Filter.svelte";
 
   import A from "./lib/A.svelte";
@@ -13,7 +16,7 @@
 </script>
 
 <!-- Before rendering components, subscribe to store (make api call) and check if data is loaded -->
-{#if !$stats}
+{#if !$stats | !$campaign_starts | !$ranking_jurisdictions | !$ranking_public_bodies}
   <h2>Loading...</h2>
 {:else}
   <div class="text-center p-3">
@@ -56,7 +59,6 @@
     </div>
   </div>
   
-{/if}
 <!-- D -->
   <div class="container mt-6 border-blue shadow-blue mb-5">
     <div class="row ranking px-3 py-4">
@@ -74,6 +76,7 @@
     </div>
 </div>
 
+{/if}
 <style>
   .col {
     padding: 0;

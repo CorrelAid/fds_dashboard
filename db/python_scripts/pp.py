@@ -179,6 +179,7 @@ def pp_messages(id_lst):
     df.rename(columns={"request": "foi_request_id"}, errors="raise", inplace=True)
     
     df = df.query(f'foi_request_id in {id_lst}')
+    
 
     # saving as csv
     with Status("Saving as csv...") as status:

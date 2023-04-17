@@ -30,12 +30,10 @@ export const filtered = derived(
         if (_.isEmpty($general_info) === false) {
             let lst = $general_info[$category]
             // let result = _.find(songs, {id});
-            console.log($term)
             let result = _.filter(lst, function(o) { 
-                return o.name.includes($term); 
+                return o.name.toLowerCase().includes($term.toLowerCase()); 
              });
             // let result = lst.filter(x => x.includes($term))
-            console.log(result)
             set(result.slice(0, 10))
         }
 

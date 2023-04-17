@@ -5,6 +5,8 @@ export const url_params = writable(null);
 
 let endpoint = "http://localhost:3000";
 
+let temp_endpoint = endpoint;
+
 // function translate_status(obj){
 // const nw = {
 //     "Eingeschlafen" : obj.asleep,
@@ -37,13 +39,13 @@ let endpoint = "http://localhost:3000";
 export const stats = derived(url_params, ($url_params, set) => {
     if ($url_params != null){
         console.log($url_params)
-        // endpoint = endpoint + url_params
+        temp_endpoint = endpoint + $url_params
     }
     else{
-        endpoint = endpoint
+        temp_endpoint = endpoint
     }
     
-    fetch(endpoint).then(function (response) {
+    fetch(temp_endpoint).then(function (response) {
         if (!response.ok) {
             throw new Error('unable to load data');
         }

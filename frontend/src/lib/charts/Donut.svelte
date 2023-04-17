@@ -10,7 +10,7 @@
     let replaceMerge = undefined;
     let lazyUpdate = false;
 
-    var option = {
+    const gen_options = (data) => {return {
         animation: false,
         tooltip: {
             trigger: "item",
@@ -49,13 +49,13 @@
                 }
             },
         ],
-    };
+   } };
 
     let chart; // our chart instance
 
-    const setOption = () => {
+    const setOption = (options) => {
         if (chart && !chart.isDisposed()) {
-            chart.setOption(option, notMerge, replaceMerge, lazyUpdate);
+            chart.setOption(options, notMerge, replaceMerge, lazyUpdate);
         }
     };
 
@@ -65,15 +65,20 @@
         }
     };
 
-    const makeChart = () => {
+    const makeChart = (el,options) => {
         destroyChart();
         chart = echarts.init(el);
-        setOption();
+        setOption(options);
     };
 
     onMount(() => {
-        makeChart();
+        makeChart(el,gen_options(data));
     });
+
+    $: if (el) {
+        console.log("change");
+        makeChart(el,gen_options(data));
+    }
 
     onDestroy(() => {
         destroyChart();
