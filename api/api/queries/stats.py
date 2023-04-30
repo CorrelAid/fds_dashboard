@@ -82,6 +82,63 @@ def percentage_costs(db, l, s):
     result = [tuple(row) for row in result]
     return result[0][0]
 
+def withdrew_costs(db, l, s):
+    if l == None and s == None:
+         not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).subquery()
+         withdrawn = select(FoiRequest.id)\
+                    .where(FoiRequest.costs != 0.0)\
+                    .where(FoiRequest.resolution == 'user_withdrew_costs').subquery()
+
+    else:
+         not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(getattr(FoiRequest, l) == s).subquery()
+
+         withdrawn = select(FoiRequest.id)\
+                    .where(FoiRequest.costs != 0.0)\
+                    .where(FoiRequest.resolution == 'user_withdrew_costs')\
+                    .where(getattr(FoiRequest, l) == s).subquery()
+         
+    stmt = select(func.count(withdrawn.c.id.distinct())/(cast(func.count(not_free.c.id.distinct()), Float))*100)\
+                         .select_from(not_free)\
+                         .join(withdrawn, not_free.c.id == withdrawn.c.id, isouter=True)
+    
+    result = db.execute(stmt).fetchall()
+    result = [tuple(row) for row in result]
+    return result[0][0]
+
+def min_costs(db, l, s):
+    if l == None and s == None:
+         stmt = select(func.min(FoiRequest.costs)).where(FoiRequest.costs != 0)
+
+    else:
+         stmt = select(func.min(FoiRequest.costs)).where(FoiRequest.costs != 0).where(getattr(FoiRequest, l) == s)
+         
+    result = db.execute(stmt).fetchall()
+    result = [tuple(row) for row in result]
+    return result[0][0]
+
+def max_costs(db, l, s):
+    if l == None and s == None:
+         stmt = select(func.max(FoiRequest.costs)).where(FoiRequest.costs != 0)
+
+    else:
+         stmt = select(func.max(FoiRequest.costs)).where(FoiRequest.costs != 0).where(getattr(FoiRequest, l) == s)
+         
+    result = db.execute(stmt).fetchall()
+    result = [tuple(row) for row in result]
+    return result[0][0]
+
+def avg_costs(db, l, s):
+    if l == None and s == None:
+         stmt = select(func.avg(FoiRequest.costs)).where(FoiRequest.costs != 0)
+
+    else:
+         stmt = select(func.avg(FoiRequest.costs)).where(FoiRequest.costs != 0).where(getattr(FoiRequest, l) == s)
+         
+    result = db.execute(stmt).fetchall()
+    result = [tuple(row) for row in result]
+    return result[0][0]
+
+
 def overall_rates(db, l, s):
     resolved_mess = select(Message.foi_request_id.distinct().label('foi_request_id'))\
                            .filter(Message.status.in_(['resolved', 'partially_successful', 'successful'])).subquery()
@@ -157,4 +214,8 @@ def query_stats(db, l, s, ascending = None):
                "dist_status": group_by_count(db, FoiRequest, FoiRequest.status, l=l, s=s),
                "requests_by_month": requests_by_month(db, FoiRequest, FoiRequest.created_at, l=l, s=s),
                "percentage_costs": percentage_costs(db, l=l, s=s),
+               "percentage_withdrawn": withdrew_costs(db, l, s),
+               "min_costs": min_costs(db, l, s),
+               "max_costs": max_costs(db, l, s),
+               "avg_costs": avg_costs(db, l, s),
                "success_rate": overall_rates(db, l=l, s=s)}

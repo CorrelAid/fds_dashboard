@@ -12,6 +12,10 @@ class Stats(BaseModel):
     dist_status: List[dict]
     requests_by_month: List[dict]
     percentage_costs: float
+    percentage_withdrawn: float
+    min_costs: float
+    max_costs: float
+    avg_costs: float
     success_rate: dict
 
 class GeneralInfo(BaseModel):
