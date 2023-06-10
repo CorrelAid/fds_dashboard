@@ -55,8 +55,10 @@ def root(db: Session = Depends(get_db),
     return cache_handler(db, l = None, s = s, ascending = ascending, key = f"ranking_{typ}_{s}_{ascending}", typ=typ, query_function = query_ranking)
 
 @app.get("/campaign_starts", response_model = CampaignStarts)
-def root(db: Session = Depends(get_db)):
-    return cache_handler(db, key = "campaign_starts", query_function = query_campaign_starts)
+def root(db: Session = Depends(get_db),
+         typ: Union[str, None] = Query(default=None, max_length=15),
+         s: Union[int, None] = Query(default=None)):
+    return cache_handler(db, typ = typ, s = s, key = "campaign_starts", query_function = query_campaign_starts)
 
 @app.get("/reaction_time",response_model = Reaction)
 def root(db: Session = Depends(get_db),
