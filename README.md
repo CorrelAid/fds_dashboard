@@ -9,18 +9,21 @@ docker compose -f db.yml down --volumes
 docker compose -f db.yml build --no-cache 
 docker compose -f db.yml  up --force-recreate -d
 ```
-2. Go to api folder. If you havent already, create env and install packages. For example with linux:
+2. Install dependencies
 ```
-python -m venv venv
-source bin/activate
+poetry install --all-extras
 ```
-3. Go to api/api folder. Create the file .env:
+3. Install Pre commit hook
+```
+poetry run pre-commit install 
+```
+4. Go to api/api folder. Create the file .env:
 ```
 POSTGRES_URL='postgresql://dagster:dagster@localhost:5435/main' 
 REDIS_ADR='localhost' 
 REDIS_PORT=6379
 ```
-4.. Run the project (while in api/api folder):
+5. Run the project (while in api/api folder):
 ```
 uvicorn main:app --reload 
 ```
