@@ -3,6 +3,28 @@ from api.models import FoiRequest, PublicBody, Jurisdiction, Campaign, Message
 from sqlalchemy import select, asc, desc, cast, Float, case, or_
 
 
+def to_dct(result):
+    lst = []
+    for row in result:
+        dct = {}
+        dct["name"] = str(row[0])
+        dct["number"] = int(row[1])
+        dct["resolution_rate"] = float(row[2])
+        dct["number_overdue"] = int(row[3])
+        dct["overdue_rate"] = float(row[4])
+        successful = row[5]
+        if successful is None:
+            successful = 0
+        dct["successful"] = float(successful)
+        success_rate = row[6]
+        if success_rate is None:
+            success_rate = 0
+        dct["success_rate"] = float(success_rate)
+        lst.append(dct)
+
+    return lst
+
+
 def ranking(db):
     total_num = (
         select(FoiRequest.public_body_id, func.count(FoiRequest.id.distinct()))
@@ -80,7 +102,7 @@ def ranking(db):
     )
 
     late2 = select(
-        late.c.public_body_id, case([(late.c.count.isnot(None), late.c.count)], else_=0).label("count")
+        late.c.public_body_id, case((late.c.count.isnot(None), late.c.count), else_=0).label("count")
     ).subquery()
 
     return late2, total_num, resolved, successful
@@ -132,24 +154,8 @@ def ranking_public_body(db, s: str, ascending: bool):
             .order_by("Verspaetungsquote")
             .limit(10)
         )
-    print(stmt)
     result = db.execute(stmt).fetchall()
-    print("AB HIER")
-    print(result)
-    lst = []
-    keys = list(dict(result[0]).keys())
-    for row in result:
-        dct = {}
-        dct["name"] = str(row[keys[0]])
-        dct["number"] = int(row[keys[1]])
-        dct["resolution_rate"] = float(row[keys[2]])
-        dct["number_overdue"] = int(row[keys[3]])
-        dct["overdue_rate"] = float(row[keys[4]])
-        dct["successful"] = float(row[keys[5]])
-        dct["success_rate"] = float(row[keys[6]])
-        lst.append(dct)
-
-    return lst
+    return to_dct(result)
 
 
 def ranking_jurisdictions(db, s: str, ascending: bool):
@@ -206,20 +212,7 @@ def ranking_jurisdictions(db, s: str, ascending: bool):
             .limit(10)
         )
     result = db.execute(stmt).fetchall()
-    print(result)
-    lst = []
-    keys = list(dict(result[0]).keys())
-    for row in result:
-        dct = {}
-        dct["name"] = str(row[keys[0]])
-        dct["number"] = int(row[keys[1]])
-        dct["resolution_rate"] = float(row[keys[2]])
-        dct["number_overdue"] = int(row[keys[3]])
-        dct["overdue_rate"] = float(row[keys[4]])
-        dct["number_successful"] = int(row[keys[5]])
-        dct["success_rate"] = float(row[keys[6]])
-        lst.append(dct)
-    return lst
+    return to_dct(result)
 
 
 def ranking_campaign(db, s: str, ascending: bool):
@@ -288,9 +281,7 @@ def ranking_campaign(db, s: str, ascending: bool):
         .subquery()
     )
 
-    late = select(
-        late.c.campaign_id, case([(late.c.count.isnot(None), late.c.count)], else_=0).label("count")
-    ).subquery()
+    late = select(late.c.campaign_id, case((late.c.count.isnot(None), late.c.count), else_=0).label("count")).subquery()
 
     if ascending:
         ordering = asc
@@ -305,6 +296,7 @@ def ranking_campaign(db, s: str, ascending: bool):
                 (cast(resolved.c.count, Float) / total_num.c.count * 100).label("Abgeschlossenenquote"),
                 late.c.count.label("Fristüberschreitungen"),
                 (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspaetungsquote"),
+                func.sum(successful.c.count).label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
             )
             .join(resolved, Campaign.id == resolved.c.campaign_id)
@@ -313,6 +305,13 @@ def ranking_campaign(db, s: str, ascending: bool):
             .join(successful, successful.c.campaign_id == Campaign.id, isouter=True)
             .where(total_num.c.campaign_id == resolved.c.campaign_id)
             .where(total_num.c.count > 20)
+            .group_by(
+                Campaign.name,
+                total_num.c.count,
+                resolved.c.count,
+                late.c.count,
+                successful.c.count,
+            )
             .order_by(ordering(s))
             .limit(10)
         )
@@ -324,6 +323,7 @@ def ranking_campaign(db, s: str, ascending: bool):
                 (cast(resolved.c.count, Float) / total_num.c.count * 100).label("Abgeschlossenenquote"),
                 late.c.count.label("Fristüberschreitungen"),
                 (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspaetungsquote"),
+                func.sum(successful.c.count).label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
             )
             .join(resolved, Campaign.id == resolved.c.campaign_id)
@@ -336,25 +336,11 @@ def ranking_campaign(db, s: str, ascending: bool):
             .limit(10)
         )
 
-    print(stmt)
     result = db.execute(stmt).fetchall()
-    lst = []
-    keys = list(dict(result[0]).keys())
-    for row in result:
-        dct = {}
-        dct["name"] = str(row[keys[0]])
-        dct["number"] = int(row[keys[1]])
-        dct["resolved_rate"] = float(row[keys[2]])
-        dct["number_overdue"] = int(row[keys[3]])
-        dct["overdue_rate"] = float(row[keys[4]])
-        dct["success_rate"] = float(row[keys[5]])
-        lst.append(dct)
-
-    return lst
+    return to_dct(result)
 
 
 def query_ranking(db, typ, s, ascending):
-    print(typ)
     if typ == "public_bodies":
         return {"ranking": ranking_public_body(db, s=s, ascending=ascending)}
     elif typ == "jurisdictions":

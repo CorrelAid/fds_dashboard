@@ -81,7 +81,7 @@ def get_reaction_time(
     s: Union[int, None] = Query(default=None),
 ):
     return cache_handler(
-        db=db, typ=typ, s=s, ascending=None, key=f"stats_{typ}_{s}", query_function=query_reaction_time
+        db=db, typ=typ, s=s, ascending=None, key=f"reaction_time_{typ}_{s}", query_function=query_reaction_time
     )
 
 

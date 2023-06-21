@@ -7,25 +7,24 @@ def initial_reaction_time(db, typ, s):
     if s is None and typ is None:
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
-            .where(Message.sender_public_body_id is None)
-            .where(Message.recipient_public_body_id is not None)
+            .where(Message.sender_public_body_id.is_(None))
+            .where(Message.recipient_public_body_id.isnot(None))
             .group_by(Message.foi_request_id)
             .subquery()
         )
 
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
-            .where(Message.sender_public_body_id is not None)
-            .where(Message.recipient_public_body_id is None)
+            .where(Message.sender_public_body_id.isnot(None))
+            .where(Message.recipient_public_body_id.is_(None))
             .group_by(Message.foi_request_id)
             .subquery()
         )
 
     elif typ == "PublicBody":
-        print("here")
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
-            .where(Message.sender_public_body_id is None)
+            .where(Message.sender_public_body_id.is_(None))
             .where(Message.recipient_public_body_id == s)
             .group_by(Message.foi_request_id)
             .subquery()
@@ -34,7 +33,7 @@ def initial_reaction_time(db, typ, s):
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .where(Message.sender_public_body_id == s)
-            .where(Message.recipient_public_body_id is None)
+            .where(Message.recipient_public_body_id.is_(None))
             .group_by(Message.foi_request_id)
             .subquery()
         )
@@ -43,7 +42,7 @@ def initial_reaction_time(db, typ, s):
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(PublicBody, Message.recipient_public_body_id == PublicBody.id)
-            .where(Message.sender_public_body_id is None)
+            .where(Message.sender_public_body_id.is_(None))
             .where(PublicBody.jurisdiction_id == s)
             .group_by(Message.foi_request_id)
             .subquery()
@@ -53,7 +52,7 @@ def initial_reaction_time(db, typ, s):
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(PublicBody, Message.sender_public_body_id == PublicBody.id)
             .where(PublicBody.jurisdiction_id == s)
-            .where(Message.recipient_public_body_id is None)
+            .where(Message.recipient_public_body_id.is_(None))
             .group_by(Message.foi_request_id)
             .subquery()
         )
@@ -62,8 +61,8 @@ def initial_reaction_time(db, typ, s):
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
-            .where(Message.sender_public_body_id is None)
-            .where(Message.recipient_public_body_id is not None)
+            .where(Message.sender_public_body_id.is_(None))
+            .where(Message.recipient_public_body_id.isnot(None))
             .where(FoiRequest.campaign_id == s)
             .group_by(Message.foi_request_id)
             .subquery()
@@ -72,8 +71,8 @@ def initial_reaction_time(db, typ, s):
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
-            .where(Message.sender_public_body_id is not None)
-            .where(Message.recipient_public_body_id is None)
+            .where(Message.sender_public_body_id.isnot(None))
+            .where(Message.recipient_public_body_id.is_(None))
             .where(FoiRequest.campaign_id == s)
             .group_by(Message.foi_request_id)
             .subquery()
@@ -99,8 +98,8 @@ def resolved_time(db, typ, s):
     if s is None and typ is None:
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
-            .where(Message.sender_public_body_id is None)
-            .where(Message.recipient_public_body_id is not None)
+            .where(Message.sender_public_body_id.is_(None))
+            .where(Message.recipient_public_body_id.isnot(None))
             .group_by(Message.foi_request_id)
             .subquery()
         )
@@ -112,10 +111,12 @@ def resolved_time(db, typ, s):
             .subquery()
         )
 
+        print(starter)
+
     elif typ == "PublicBody":
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
-            .where(Message.sender_public_body_id is None)
+            .where(Message.sender_public_body_id.is_(None))
             .where(Message.recipient_public_body_id == s)
             .group_by(Message.foi_request_id)
             .subquery()
@@ -133,7 +134,7 @@ def resolved_time(db, typ, s):
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(PublicBody, Message.recipient_public_body_id == PublicBody.id)
-            .where(Message.sender_public_body_id is None)
+            .where(Message.sender_public_body_id.is_(None))
             .where(PublicBody.jurisdiction_id == s)
             .group_by(Message.foi_request_id)
             .subquery()
@@ -152,7 +153,7 @@ def resolved_time(db, typ, s):
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
-            .where(Message.sender_public_body_id is None)
+            .where(Message.sender_public_body_id.is_(None))
             .where(FoiRequest.campaign_id == s)
             .group_by(Message.foi_request_id)
             .subquery()
@@ -174,8 +175,6 @@ def resolved_time(db, typ, s):
     )
 
     average = select(func.avg(combine.c.time))
-
-    print(average)
 
     result = db.execute(average).fetchall()
     result = [tuple(row) for row in result]
