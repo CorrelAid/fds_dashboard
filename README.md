@@ -25,7 +25,7 @@ REDIS_PORT=6379
 ```
 5. Run the project (while in api/api folder):
 ```
-uvicorn main:app --reload 
+poetry run uvicorn main:app --reload 
 ```
 
 ### Working on frontend
