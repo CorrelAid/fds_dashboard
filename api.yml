@@ -41,7 +41,7 @@ services:
     depends_on:
       - postgres
     environment:
-      POSTGRES_URL: postgresql://api:1234@postgres:5432/main
+      POSTGRES_URL: postgresql://dagster:dagster@postgres:5432/main
       REDIS_ADR: redis
       REDIS_PORT: 6379
     networks:

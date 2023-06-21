@@ -1,13 +1,13 @@
-FROM python:3.9
+FROM python:3.11
+RUN mkdir /app
+COPY ./ /app
+COPY pyproject.toml /app
+WORKDIR /app
+ENV PYTHONPATH=${PYTHONPATH}:${PWD} 
+RUN pip3 install poetry
+RUN poetry config virtualenvs.create false
+RUN poetry install --only main
 
-WORKDIR /code
+WORKDIR /app/api
 
-COPY ./requirements.txt /code/requirements.txt
-
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
-
-COPY ./api /code/app
-
-WORKDIR /code/app
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
