@@ -9,7 +9,7 @@ metadata = Base.metadata
 
 
 class Campaign(Base):
-    __tablename__ = 'campaigns'
+    __tablename__ = "campaigns"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250))
@@ -19,27 +19,27 @@ class Campaign(Base):
 
 
 class Jurisdiction(Base):
-    __tablename__ = 'jurisdictions'
+    __tablename__ = "jurisdictions"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250))
 
 
 class PublicBody(Base):
-    __tablename__ = 'public_bodies'
+    __tablename__ = "public_bodies"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250))
-    jurisdiction_id = Column(ForeignKey('jurisdictions.id'))
+    jurisdiction_id = Column(ForeignKey("jurisdictions.id"))
 
-    jurisdiction = relationship('Jurisdiction')
+    jurisdiction = relationship("Jurisdiction")
 
 
 class FoiRequest(Base):
-    __tablename__ = 'foi_requests'
+    __tablename__ = "foi_requests"
 
     id = Column(Integer, primary_key=True)
-    jurisdiction_id = Column(ForeignKey('jurisdictions.id'))
+    jurisdiction_id = Column(ForeignKey("jurisdictions.id"))
     refusal_reason = Column(String(750))
     costs = Column(Numeric)
     due_date = Column(TIMESTAMP(precision=6))
@@ -48,19 +48,19 @@ class FoiRequest(Base):
     status = Column(String(26))
     resolution = Column(String(26))
     user_id = Column(Integer)
-    public_body_id = Column(ForeignKey('public_bodies.id'))
-    campaign_id = Column(ForeignKey('campaigns.id'))
+    public_body_id = Column(ForeignKey("public_bodies.id"))
+    campaign_id = Column(ForeignKey("campaigns.id"))
 
-    campaign = relationship('Campaign')
-    jurisdiction = relationship('Jurisdiction')
-    public_body = relationship('PublicBody')
+    campaign = relationship("Campaign")
+    jurisdiction = relationship("Jurisdiction")
+    public_body = relationship("PublicBody")
 
 
 class Message(Base):
-    __tablename__ = 'messages'
+    __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True)
-    foi_request_id = Column(ForeignKey('foi_requests.id'))
+    foi_request_id = Column(ForeignKey("foi_requests.id"))
     sent = Column(Boolean)
     is_response = Column(Boolean)
     is_postal = Column(Boolean)
@@ -70,4 +70,4 @@ class Message(Base):
     status = Column(String(20))
     timestamp = Column(TIMESTAMP(precision=6))
 
-    foi_request = relationship('FoiRequest')
+    foi_request = relationship("FoiRequest")

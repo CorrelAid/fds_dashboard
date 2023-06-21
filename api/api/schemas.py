@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from pydantic.schema import Optional, List
-from datetime import datetime, timedelta
-from collections import OrderedDict
+from pydantic.schema import List
+from datetime import timedelta
+
 
 class Stats(BaseModel):
     foi_requests: int
@@ -18,21 +18,21 @@ class Stats(BaseModel):
     avg_costs: float
     success_rate: dict
 
+
 class GeneralInfo(BaseModel):
     jurisdictions: List[dict]
     public_bodies: List[dict]
     campaigns: List[dict]
-    
+
+
 class Ranking(BaseModel):
     ranking: List[dict]
+
 
 class CampaignStarts(BaseModel):
     campaign_starts: List[dict]
 
+
 class Reaction(BaseModel):
     initial_reaction_time: timedelta
     resolved_time: timedelta
-
-    
-
-    
