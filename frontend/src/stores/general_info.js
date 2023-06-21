@@ -1,7 +1,7 @@
 import { _ } from "lodash";
 import { readable, writable, derived } from 'svelte/store';
 
-const endpoint = "http://localhost:3000/general_info";
+const endpoint = "http://127.0.0.1:8000/general_info";
 
 
 // The readable() function takes in the initial state of the store and a function that will be called once there is a first subscription (will not be called repeatedly)

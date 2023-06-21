@@ -16,7 +16,7 @@ source bin/activate
 ```
 3. Go to api/api folder. Create the file .env:
 ```
-POSTGRES_URL='postgresql://api:1234@localhost:5432/main' 
+POSTGRES_URL='postgresql://dagster:dagster@localhost:5435/main' 
 REDIS_ADR='localhost' 
 REDIS_PORT=6379
 ```

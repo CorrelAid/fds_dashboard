@@ -1,6 +1,6 @@
 import { readable } from 'svelte/store';
 
-const endpoint = "http://localhost:3000/ranking?typ=public_bodies";
+const endpoint = "http://127.0.0.1:8000/ranking?typ=public_bodies";
 
 
 export const ranking_public_bodies = readable(null, function start(set) {

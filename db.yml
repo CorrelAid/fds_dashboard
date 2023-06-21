@@ -7,9 +7,6 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - APP_DB_USER=api
-      - APP_DB_PASS=1234
-      - APP_DB_NAME=main
     ports:
       - 5435:5432
     # wait till all scripts are done etc.

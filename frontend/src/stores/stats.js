@@ -3,7 +3,7 @@ import { writable,derived } from 'svelte/store';
 export const url_params = writable(null);
 
 
-let endpoint = "http://localhost:3000";
+let endpoint = "http://127.0.0.1:8000";
 
 let temp_endpoint = endpoint;
 

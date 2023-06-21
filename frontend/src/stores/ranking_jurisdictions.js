@@ -1,6 +1,6 @@
 import { readable } from 'svelte/store';
 
-const endpoint = "http://localhost:3000/ranking?typ=jurisdictions";
+const endpoint = "http://127.0.0.1:8000/ranking?typ=jurisdictions";
 
 
 export const ranking_jurisdictions = readable(null, function start(set) {
