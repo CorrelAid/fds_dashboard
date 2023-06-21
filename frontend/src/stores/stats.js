@@ -1,9 +1,10 @@
 import { writable,derived } from 'svelte/store';
+import {api_url} from "../lib/data/data.js"
+
+const endpoint = `${api_url}`
 
 export const url_params = writable(null);
 
-
-let endpoint = "http://127.0.0.1:8000";
 
 let temp_endpoint = endpoint;
 

@@ -1,6 +1,8 @@
 import { readable } from 'svelte/store';
+import {api_url} from "../lib/data/data.js"
 
-const endpoint = "http://127.0.0.1:8000/ranking?typ=public_bodies";
+const endpoint = `${api_url}/rankings?typ=public_bodies`
+
 
 
 export const ranking_public_bodies = readable(null, function start(set) {
