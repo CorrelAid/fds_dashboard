@@ -1,5 +1,5 @@
 from sqlalchemy import func
-from models import FoiRequest, PublicBody, Jurisdiction, Campaign, Message
+from api.models import FoiRequest, PublicBody, Jurisdiction, Campaign, Message
 from sqlalchemy import select, asc, desc, cast, Float, case, or_
 
 

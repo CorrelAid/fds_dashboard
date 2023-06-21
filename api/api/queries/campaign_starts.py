@@ -1,4 +1,4 @@
-from models import FoiRequest, Campaign
+from api.models import FoiRequest, Campaign
 from sqlalchemy import select, asc
 
 

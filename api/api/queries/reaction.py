@@ -1,5 +1,5 @@
 from sqlalchemy import func
-from models import FoiRequest, PublicBody, Message
+from api.models import FoiRequest, PublicBody, Message
 from sqlalchemy import select
 
 

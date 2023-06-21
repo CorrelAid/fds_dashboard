@@ -18,7 +18,6 @@ def cache_handler(db, key, query_function, **kwargs):
     # else:
     print("using db")
     query_result = query_function(db=db, **kwargs)
-    print(query_result)
     r.set(cache_key, json.dumps(query_result, indent=4, sort_keys=False, default=str))
     r.expire(cache_key, 60 * 60 * 12)
     return query_result

@@ -1,13 +1,13 @@
 from sqlalchemy import func
-from models import FoiRequest, Message
+from api.models import FoiRequest, Message
 from sqlalchemy import select, cast, Float
 
 
-def resolved_(db, table, level, s):
-    if level is not None and s is not None:
+def resolved_(db, table, level, selection):
+    if level is not None and selection is not None:
         stmt = (
             select(func.count(table.id).label("value"))
-            .where(getattr(table, level) == s)
+            .where(getattr(table, level) == selection)
             .where(FoiRequest.status == "resolved")
             .group_by(FoiRequest.status)
         )
@@ -19,15 +19,15 @@ def resolved_(db, table, level, s):
         )
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
-    print(result)
+
     return result[0][0]
 
 
-def group_by_count(db, table, column, level, s):
-    if level is not None and s is not None:
+def group_by_count(db, table, column, level, selection):
+    if level is not None and selection is not None:
         pre = (
             select(column.label("name"), func.count(table.id).label("value"))
-            .where(getattr(table, level) == s)
+            .where(getattr(table, level) == selection)
             .group_by(column)
             .subquery()
         )
@@ -40,17 +40,17 @@ def group_by_count(db, table, column, level, s):
         stmt = select(pre.c.name, pre.c.value)
 
     result = db.execute(stmt).fetchall()
-    print(result)
+
     result = [{"value": row[1], "name": row[0]} for row in result]
 
     return result
 
 
-def requests_by_month(db, table, column, level, s):
-    if level is not None and s is not None:
+def requests_by_month(db, table, column, level, selection):
+    if level is not None and selection is not None:
         stmt = (
             select(func.date_trunc("month", column), func.count(table.id))
-            .where(getattr(table, level) == s)
+            .where(getattr(table, level) == selection)
             .group_by(func.date_trunc("month", column))
             .order_by(func.date_trunc("month", column))
         )
@@ -70,9 +70,9 @@ def requests_by_month(db, table, column, level, s):
     return lst
 
 
-def user_count(db, table, level, s):
-    if level is not None and s is not None:
-        stmt = select(func.count(table.user_id.distinct())).where(getattr(table, level) == s)
+def user_count(db, table, level, selection):
+    if level is not None and selection is not None:
+        stmt = select(func.count(table.user_id.distinct())).where(getattr(table, level) == selection)
     else:
         stmt = select(func.count(table.user_id.distinct()))
     result = db.execute(stmt).fetchall()
@@ -80,9 +80,9 @@ def user_count(db, table, level, s):
     return result[0][0]
 
 
-def request_count(db, table, level, s):
-    if level is not None and s is not None:
-        stmt = select(func.count(table.id.distinct())).where(getattr(table, level) == s)
+def request_count(db, table, level, selection):
+    if level is not None and selection is not None:
+        stmt = select(func.count(table.id.distinct())).where(getattr(table, level) == selection)
     else:
         stmt = select(func.count(table.id.distinct()))
     result = db.execute(stmt).fetchall()
@@ -90,20 +90,23 @@ def request_count(db, table, level, s):
     return result[0][0]
 
 
-def percentage_costs(db, level, s):
-    if level is None and s is None:
+def percentage_costs(db, level, selection):
+    if level is None and selection is None:
         not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).subquery()
         stmt = select(
             func.count(not_free.c.id.distinct()) / (cast(func.count(FoiRequest.id.distinct()), Float)) * 100
         ).join(not_free, not_free.c.id == FoiRequest.id, isouter=True)
     else:
         not_free = (
-            select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(getattr(FoiRequest, level) == s).subquery()
+            select(FoiRequest.id)
+            .where(FoiRequest.costs != 0.0)
+            .where(getattr(FoiRequest, level) == selection)
+            .subquery()
         )
         stmt = (
             select(func.count(not_free.c.id.distinct()) / (cast(func.count(FoiRequest.id.distinct()), Float)) * 100)
             .join(not_free, not_free.c.id == FoiRequest.id, isouter=True)
-            .where(getattr(FoiRequest, level) == s)
+            .where(getattr(FoiRequest, level) == selection)
         )
 
     result = db.execute(stmt).fetchall()
@@ -111,8 +114,8 @@ def percentage_costs(db, level, s):
     return result[0][0]
 
 
-def withdrew_costs(db, level, s):
-    if level is None and s is None:
+def withdrew_costs(db, level, selection):
+    if level is None and selection is None:
         not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).subquery()
         withdrawn = (
             select(FoiRequest.id)
@@ -123,14 +126,17 @@ def withdrew_costs(db, level, s):
 
     else:
         not_free = (
-            select(FoiRequest.id).where(FoiRequest.costs != 0.0).where(getattr(FoiRequest, level) == s).subquery()
+            select(FoiRequest.id)
+            .where(FoiRequest.costs != 0.0)
+            .where(getattr(FoiRequest, level) == selection)
+            .subquery()
         )
 
         withdrawn = (
             select(FoiRequest.id)
             .where(FoiRequest.costs != 0.0)
             .where(FoiRequest.resolution == "user_withdrew_costs")
-            .where(getattr(FoiRequest, level) == s)
+            .where(getattr(FoiRequest, level) == selection)
             .subquery()
         )
 
@@ -145,43 +151,55 @@ def withdrew_costs(db, level, s):
     return result[0][0]
 
 
-def min_costs(db, level, s):
-    if level is None and s is None:
+def min_costs(db, level, selection):
+    if level is None and selection is None:
         stmt = select(func.min(FoiRequest.costs)).where(FoiRequest.costs != 0)
 
     else:
-        stmt = select(func.min(FoiRequest.costs)).where(FoiRequest.costs != 0).where(getattr(FoiRequest, level) == s)
+        stmt = (
+            select(func.min(FoiRequest.costs))
+            .where(FoiRequest.costs != 0)
+            .where(getattr(FoiRequest, level) == selection)
+        )
 
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
     return result[0][0]
 
 
-def max_costs(db, level, s):
-    if level is None and s is None:
+def max_costs(db, level, selection):
+    if level is None and selection is None:
         stmt = select(func.max(FoiRequest.costs)).where(FoiRequest.costs != 0)
 
     else:
-        stmt = select(func.max(FoiRequest.costs)).where(FoiRequest.costs != 0).where(getattr(FoiRequest, level) == s)
+        stmt = (
+            select(func.max(FoiRequest.costs))
+            .where(FoiRequest.costs != 0)
+            .where(getattr(FoiRequest, level) == selection)
+        )
 
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
     return result[0][0]
 
 
-def avg_costs(db, level, s):
-    if level is None and s is None:
+def avg_costs(db, level, selection):
+    if level is None and selection is None:
         stmt = select(func.avg(FoiRequest.costs)).where(FoiRequest.costs != 0)
 
     else:
-        stmt = select(func.avg(FoiRequest.costs)).where(FoiRequest.costs != 0).where(getattr(FoiRequest, level) == s)
+        stmt = (
+            select(func.avg(FoiRequest.costs))
+            .where(FoiRequest.costs != 0)
+            .where(getattr(FoiRequest, level) == selection)
+        )
 
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
     return result[0][0]
 
 
-def overall_rates(db, level, s):
+def overall_rates(db, level, selection):
     resolved_mess = (
         select(Message.foi_request_id.distinct().label("foi_request_id"))
         .filter(Message.status.in_(["resolved", "partially_successful", "successful"]))
@@ -222,7 +240,7 @@ def overall_rates(db, level, s):
         .subquery()
     )
 
-    if level is None and s is None:
+    if level is None and selection is None:
         stmt = (
             select(
                 func.count(FoiRequest.id.distinct()).label("Anzahl"),
@@ -251,7 +269,7 @@ def overall_rates(db, level, s):
             )
             .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)
             .join(late, late.c.id == FoiRequest.id, isouter=True)
-            .where(FoiRequest.public_body_id == s)
+            .where(FoiRequest.public_body_id == selection)
         )
 
         final = select(
@@ -270,7 +288,7 @@ def overall_rates(db, level, s):
             )
             .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)
             .join(late, late.c.id == FoiRequest.id, isouter=True)
-            .where(FoiRequest.jurisdiction_id == s)
+            .where(FoiRequest.jurisdiction_id == selection)
         )
 
         final = select(
@@ -288,7 +306,7 @@ def overall_rates(db, level, s):
             )
             .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)
             .join(late, late.c.id == FoiRequest.id, isouter=True)
-            .where(FoiRequest.campaign_id == s)
+            .where(FoiRequest.campaign_id == selection)
         )
 
         final = select(
@@ -308,22 +326,22 @@ def overall_rates(db, level, s):
     return dct
 
 
-def query_stats(db, level, s, ascending=None):
-    foi_requests = request_count(db, FoiRequest, level=level, s=s)
-    resolved = resolved_(db, FoiRequest, level=level, s=s)
+def query_stats(db, level, selection, ascending=None):
+    foi_requests = request_count(db, FoiRequest, level=level, selection=selection)
+    resolved = resolved_(db, FoiRequest, level=level, selection=selection)
 
     return {
         "foi_requests": foi_requests,
         "foi_requests_resolved": resolved,
         "foi_requests_not_resolved": foi_requests - resolved,
-        "users": user_count(db, FoiRequest, level=level, s=s),
-        "dist_resolution": group_by_count(db, FoiRequest, FoiRequest.resolution, level=level, s=s),
-        "dist_status": group_by_count(db, FoiRequest, FoiRequest.status, level=level, s=s),
-        "requests_by_month": requests_by_month(db, FoiRequest, FoiRequest.created_at, level=level, s=s),
-        "percentage_costs": percentage_costs(db, level=level, s=s),
-        "percentage_withdrawn": withdrew_costs(db, level, s),
-        "min_costs": min_costs(db, level, s),
-        "max_costs": max_costs(db, level, s),
-        "avg_costs": avg_costs(db, level, s),
-        "success_rate": overall_rates(db, level=level, s=s),
+        "users": user_count(db, FoiRequest, level=level, selection=selection),
+        "dist_resolution": group_by_count(db, FoiRequest, FoiRequest.resolution, level=level, selection=selection),
+        "dist_status": group_by_count(db, FoiRequest, FoiRequest.status, level=level, selection=selection),
+        "requests_by_month": requests_by_month(db, FoiRequest, FoiRequest.created_at, level=level, selection=selection),
+        "percentage_costs": percentage_costs(db, level=level, selection=selection),
+        "percentage_withdrawn": withdrew_costs(db, level, selection),
+        "min_costs": min_costs(db, level, selection),
+        "max_costs": max_costs(db, level, selection),
+        "avg_costs": avg_costs(db, level, selection),
+        "success_rate": overall_rates(db, level=level, selection=selection),
     }

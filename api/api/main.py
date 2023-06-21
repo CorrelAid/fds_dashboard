@@ -2,14 +2,14 @@ from typing import Union
 from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from schemas import Stats, GeneralInfo, Ranking, CampaignStarts, Reaction
-from database import SessionLocal
-from queries.general_info import query_general_info
-from queries.stats import query_stats
-from queries.rankings import query_ranking
-from queries.campaign_starts import query_campaign_starts
-from queries.reaction import query_reaction_time
-from cache import cache_handler
+from api.schemas import Stats, GeneralInfo, Ranking, CampaignStarts, Reaction
+from api.database import SessionLocal
+from api.queries.general_info import query_general_info
+from api.queries.stats import query_stats
+from api.queries.rankings import query_ranking
+from api.queries.campaign_starts import query_campaign_starts
+from api.queries.reaction import query_reaction_time
+from api.cache import cache_handler
 
 
 app = FastAPI(title="FDS Statistics API")
@@ -31,9 +31,16 @@ def get_db():
 def root(
     db: Session = Depends(get_db),
     level: Union[str, None] = Query(default=None, max_length=15),
-    s: Union[int, None] = Query(default=None),
+    selection: Union[int, None] = Query(default=None),
 ):
-    return cache_handler(db=db, level=level, s=s, ascending=None, key=f"stats_{level}_{s}", query_function=query_stats)
+    return cache_handler(
+        db=db,
+        level=level,
+        selection=selection,
+        ascending=None,
+        key=f"stats_{level}_{selection}",
+        query_function=query_stats,
+    )
 
 
 @app.get("/general_info", response_model=GeneralInfo)

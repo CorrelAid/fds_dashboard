@@ -1,4 +1,4 @@
-from models import PublicBody, Jurisdiction, Campaign
+from api.models import PublicBody, Jurisdiction, Campaign
 from sqlalchemy import select, asc
 
 
