@@ -13,6 +13,7 @@
   import C2 from "./lib/C2.svelte";
   import D1 from "./lib/D1.svelte";
   import D2 from "./lib/D2.svelte";
+  import D3 from "./lib/D3.svelte";
 </script>
 
 <!-- Before rendering components, subscribe to store (make api call) and check if data is loaded -->
@@ -31,8 +32,8 @@
     <!-- A -->
     <div class="row">
       <div class="col p-3">
-      <A />
-    </div>
+        <A />
+      </div>
     </div>
     <!-- B -->
     <div class="row">
@@ -58,25 +59,30 @@
       </div>
     </div>
   </div>
-  
-<!-- D -->
+
+  <!-- D -->
   <div class="container mt-6 border-blue shadow-blue mb-5">
     <div class="row ranking px-3 py-4">
       <h3 class="">Rankings</h3>
     </div>
-    <div class="row ">
+    <div class="row">
       <div class="col p-3">
         <D1 />
       </div>
-    </div> 
-<div class="row ">
+    </div>
+    <div class="row">
       <div class="col p-3">
         <D2 />
       </div>
     </div>
-</div>
-
+    <div class="row">
+      <div class="col p-3">
+        <D3 />
+      </div>
+    </div>
+  </div>
 {/if}
+
 <style>
   .col {
     padding: 0;

@@ -12,8 +12,9 @@
       <th scope="col">#</th>
       <th scope="col">Name</th>
       <th scope="col">Anfragen</th>
+      <th scope="col">Verpätungsquote</th>
+      <th scope="col">Erfolgreich</th>
       <th scope="col">Erfolgsquote</th>
-      <th scope="col">Verspätet</th>
     </tr>
   </thead>
   <tbody>
@@ -22,8 +23,9 @@
       <th scope="row">{i+1}</th>
       <td>{row.name}</td>
       <td>{row.number}</td>
-      <td>{formatAsPercent(row.success_rate)}</td>
       <td>{formatAsPercent(row.overdue_rate)}</td>
+      <td>{row.successful}</td>
+      <td>{formatAsPercent(row.success_rate)}</td>
     </tr>
     {/each}   
   </tbody>
