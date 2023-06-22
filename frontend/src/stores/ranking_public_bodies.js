@@ -1,7 +1,7 @@
 import { readable } from 'svelte/store';
 import {api_url} from "../lib/data/data.js"
 
-const endpoint = `${api_url}/rankings?typ=public_bodies`
+const endpoint = `${api_url}/ranking?typ=public_bodies`
 
 
 

@@ -23,7 +23,9 @@ mkdir -p static/fonts/
 mkdir -p static/js/d3/
 
 cd static/css/fds
-curl "https://static.frag-den-staat.de/static/css/main.css" > main.css
+curl "https://static.frag-den-staat.de/static/css/main.css" | sed "s/https:\/\/static.frag-den-staat.de//g" > main.css
+
+
 
 cd ../../fonts/
 for font in "${FONTS[@]}"
