@@ -1,15 +1,9 @@
 <script>
-    import * as echarts from "echarts";
-    import { onMount, onDestroy } from "svelte";
-
+    import Chart from "./Chart.svelte";
     export let data;
     export let height;
     export let y_labels = [];
 
-    let el;
-    let notMerge = false;
-    let replaceMerge = undefined;
-    let lazyUpdate = false;
 
     $: console.log(data);
 
@@ -70,42 +64,6 @@
         };
     };
 
-    let chart; // our chart instance
-
-    const setOption = (options) => {
-        if (chart && !chart.isDisposed()) {
-            chart.setOption(options, notMerge, replaceMerge, lazyUpdate);
-        }
-    };
-
-    const destroyChart = () => {
-        if (chart && !chart.isDisposed()) {
-            chart.dispose();
-        }
-    };
-
-    const makeChart = (el,options) => {
-        destroyChart();
-        chart = echarts.init(el);
-        setOption(options);
-    };
-
-    onMount(() => {
-        makeChart(el,gen_options(data));
-    });
-
-    $: if (el) {
-        console.log("change");
-        makeChart(el,gen_options(data));
-    }
-
-    onDestroy(() => {
-        destroyChart();
-    });
 </script>
 
-<svelte:window on:resize={makeChart(el,gen_options(data))} />
-
-{#if y_labels != []}
-    <div bind:this={el} class="w-100" style="height: {height}px" />
-{/if}
+<Chart options={gen_options(data)} {height} />
