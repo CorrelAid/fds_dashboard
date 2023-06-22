@@ -5,3 +5,10 @@ body {
 }
 
 
+.arrow-white svg path {
+  fill: white;
+}
+
+.arrow-blue svg path {
+  fill: #0047e1;
+}
