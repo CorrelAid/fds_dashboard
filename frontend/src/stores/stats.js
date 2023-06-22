@@ -45,8 +45,9 @@ export const stats = derived(url_params, ($url_params, set) => {
     else{
         temp_endpoint = endpoint
     }
-    
+    console.log("here",temp_endpoint)
     fetch(temp_endpoint).then(function (response) {
+        
         if (!response.ok) {
             throw new Error('unable to load data');
         }
