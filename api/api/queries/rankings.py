@@ -114,14 +114,14 @@ def ranking_public_body(db, s: str, ascending: bool):
     else:
         ordering = desc
     late, total_num, resolved, successful = ranking(db)
-    if s in ["Anzahl", "Erfolgsquote", "Verspaetungsquote", "Abgeschlossenenquote"]:
+    if s in ["Anzahl", "Erfolgsquote", "Verspätungsquote", "Abgeschlossenenquote", "Erfolgreich"]:
         stmt = (
             select(
                 PublicBody.name,
                 total_num.c.count.label("Anzahl"),
                 (cast(resolved.c.count, Float) / total_num.c.count * 100).label("Abgeschlossenenquote"),
                 late.c.count.label("Fristüberschreitungen"),
-                (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspaetungsquote"),
+                (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
                 successful.c.count.label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
             )
@@ -141,7 +141,7 @@ def ranking_public_body(db, s: str, ascending: bool):
                 total_num.c.count.label("Anzahl"),
                 (cast(resolved.c.count, Float) / total_num.c.count * 100).label("Abgeschlossenenquote"),
                 late.c.count.label("Fristüberschreitungen"),
-                (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspaetungsquote"),
+                (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
                 successful.c.count.label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
             )
@@ -151,7 +151,7 @@ def ranking_public_body(db, s: str, ascending: bool):
             .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
             .where(total_num.c.public_body_id == resolved.c.public_body_id)
             .where(total_num.c.count > 20)
-            .order_by("Verspaetungsquote")
+            .order_by("Verspätungsquote")
             .limit(10)
         )
     result = db.execute(stmt).fetchall()
@@ -165,7 +165,7 @@ def ranking_jurisdictions(db, s: str, ascending: bool):
         ordering = desc
 
     late, total_num, resolved, successful = ranking(db)
-    if s in ["Anzahl", "Erfolgsquote", "Verspaetungsquote", "Abgeschlossenenquote"]:
+    if s in ["Anzahl", "Erfolgsquote", "Verspätungsquote", "Abgeschlossenenquote", "Erfolgreich"]:
         stmt = (
             select(
                 Jurisdiction.name,
@@ -174,7 +174,7 @@ def ranking_jurisdictions(db, s: str, ascending: bool):
                     "Abgeschlossenenquote"
                 ),
                 func.sum(late.c.count).label("Fristüberschreitungen"),
-                (cast(func.sum(late.c.count), Float) / func.sum(total_num.c.count) * 100).label("Verspaetungsquote"),
+                (cast(func.sum(late.c.count), Float) / func.sum(total_num.c.count) * 100).label("Verspätungsquote"),
                 func.sum(successful.c.count).label("Erfolgreich"),
                 (cast(func.sum(successful.c.count), Float) / func.sum(total_num.c.count) * 100).label("Erfolgsquote"),
             )
@@ -197,7 +197,7 @@ def ranking_jurisdictions(db, s: str, ascending: bool):
                     "Abgeschlossenenquote"
                 ),
                 func.sum(late.c.count).label("Fristüberschreitungen"),
-                (cast(func.sum(late.c.count), Float) / func.sum(total_num.c.count) * 100).label("Verspaetungsquote"),
+                (cast(func.sum(late.c.count), Float) / func.sum(total_num.c.count) * 100).label("Verspätungsquote"),
                 func.sum(successful.c.count).label("Erfolgreich"),
                 (cast(func.sum(successful.c.count), Float) / func.sum(total_num.c.count) * 100).label("Erfolgsquote"),
             )
@@ -288,14 +288,14 @@ def ranking_campaign(db, s: str, ascending: bool):
     else:
         ordering = desc
 
-    if s in ["Anzahl", "Erfolgsquote", "Verspaetungsquote", "Abgeschlossenenquote"]:
+    if s in ["Anzahl", "Erfolgsquote", "Verspätungsquote", "Abgeschlossenenquote", "Erfolgreich"]:
         stmt = (
             select(
                 Campaign.name,
                 total_num.c.count.label("Anzahl"),
                 (cast(resolved.c.count, Float) / total_num.c.count * 100).label("Abgeschlossenenquote"),
                 late.c.count.label("Fristüberschreitungen"),
-                (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspaetungsquote"),
+                (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
                 func.sum(successful.c.count).label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
             )
@@ -322,7 +322,7 @@ def ranking_campaign(db, s: str, ascending: bool):
                 total_num.c.count.label("Anzahl"),
                 (cast(resolved.c.count, Float) / total_num.c.count * 100).label("Abgeschlossenenquote"),
                 late.c.count.label("Fristüberschreitungen"),
-                (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspaetungsquote"),
+                (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
                 func.sum(successful.c.count).label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
             )
@@ -332,7 +332,7 @@ def ranking_campaign(db, s: str, ascending: bool):
             .join(successful, successful.c.campaign_id == Campaign.id, isouter=True)
             .where(total_num.c.campaign_id == resolved.c.campaign_id)
             .where(total_num.c.count > 20)
-            .order_by("Verspaetungsquote")
+            .order_by("Verspätungsquote")
             .limit(10)
         )
 

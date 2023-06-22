@@ -3,7 +3,7 @@
     import Lense from "./svg/Lense.svelte";
     import Dropdown from "./svg/Dropdown.svelte";
     import { url_params } from "../stores/stats.js";
-    import { term,category,filtered } from "../stores/general_info.js";
+    import { term, category, filtered } from "../stores/general_info.js";
     let show = "";
     let selected = null;
 
@@ -11,21 +11,18 @@
         show == "" ? (show = "show") : (show = "");
     };
 
-    function set_url_params(selected){
-        if (selected!=null){
+    function set_url_params(selected) {
+        if (selected != null) {
             const tr = {
-                "jurisdictions":"jurisdiction_id",
-                "public_bodies":"public_body_id",
-                "campaigns":"campaign_id",
-            }
-            $url_params = `?l=${tr[$category]}&s=${selected}`
-        }
-        else{
-            $url_params = ""
+                jurisdictions: "jurisdiction_id",
+                public_bodies: "public_body_id",
+                campaigns: "campaign_id",
+            };
+            $url_params = `?l=${tr[$category]}&s=${selected}`;
+        } else {
+            $url_params = "";
         }
     }
-
-    
 </script>
 
 <div class="container">
@@ -38,11 +35,13 @@
                     </li> -->
                     <li class="nav-item">
                         <button
-                            class="nav-link  {$category == 'public_bodies'
+                            class="nav-link {$category == 'public_bodies'
                                 ? 'active'
                                 : ''}"
                             on:click={() => {
-                                ($category = "public_bodies"), (selected = ""), ($term = "");
+                                ($category = "public_bodies"),
+                                    (selected = ""),
+                                    ($term = "");
                             }}>Behörden</button
                         >
                     </li>
@@ -52,7 +51,9 @@
                                 ? 'active'
                                 : ''}"
                             on:click={() => {
-                                ($category = "jurisdictions"), (selected = ""), ($term = "");
+                                ($category = "jurisdictions"),
+                                    (selected = ""),
+                                    ($term = "");
                             }}>Jurisdiktionen</button
                         >
                     </li>
@@ -62,7 +63,9 @@
                                 ? 'active'
                                 : ''}"
                             on:click={() => {
-                                ($category = "campaigns"), (selected = ""), ($term = "");
+                                ($category = "campaigns"),
+                                    (selected = ""),
+                                    ($term = "");
                             }}>Kampagnen</button
                         >
                     </li>
@@ -71,7 +74,7 @@
         </div>
 
         <div
-            class="col-12  d-flex justify-content-center align-items-center py-4"
+            class="col-12 d-flex justify-content-center align-items-center py-4"
         >
             <div
                 class="dropdown show"
@@ -79,7 +82,7 @@
                 on:click_outside={show === "show" ? toggle() : null}
             >
                 <div
-                    class="d-flex justify-content-center align-items-center "
+                    class="d-flex justify-content-center align-items-center"
                     style="height: 40px;"
                 >
                     <span
@@ -109,8 +112,10 @@
                     </span>
                     <button
                         type="button"
-                        class="btn fw-normal btn-primary ms-3 h-100 d-flex justify-content-center align-items-center " on:click={()=>{set_url_params(selected)}}
-                        >Anzeigen</button
+                        class="btn fw-normal btn-primary ms-3 h-100 d-flex justify-content-center align-items-center"
+                        on:click={() => {
+                            set_url_params(selected);
+                        }}>Anzeigen</button
                     >
                 </div>
 
@@ -125,12 +130,14 @@
                         }}>Alle</span
                     >
                     {#each $filtered as item}
-                    <span
-                        class="dropdown-item"
-                        on:click={() => {
-                            (selected = item.id), (show = ""), ($term = item.name);
-                        }}>{item.name}</span
-                    >
+                        <span
+                            class="dropdown-item"
+                            on:click={() => {
+                                (selected = item.id),
+                                    (show = ""),
+                                    ($term = item.name);
+                            }}>{item.name}</span
+                        >
                     {/each}
                 </div>
             </div>

@@ -24,6 +24,10 @@ def test_ranking_campaigns():
     assert response.status_code == 200
     temp = response.json()
     assert isinstance(temp, dict)
+    response = client.get("/ranking?typ=campaigns&ascending=True&s=Anzahl")
+    assert response.status_code == 200
+    temp = response.json()
+    assert isinstance(temp, dict)
 
 
 def test_ranking_jurisdictions():
@@ -31,10 +35,18 @@ def test_ranking_jurisdictions():
     assert response.status_code == 200
     temp = response.json()
     assert isinstance(temp, dict)
+    response = client.get("/ranking?typ=public_bodies&ascending=True&s=Anzahl")
+    assert response.status_code == 200
+    temp = response.json()
+    assert isinstance(temp, dict)
 
 
 def test_ranking_public_bodies():
     response = client.get("/ranking?typ=public_bodies")
+    assert response.status_code == 200
+    temp = response.json()
+    assert isinstance(temp, dict)
+    response = client.get("/ranking?typ=public_bodies&ascending=True&s=Anzahl")
     assert response.status_code == 200
     temp = response.json()
     assert isinstance(temp, dict)

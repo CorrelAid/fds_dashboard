@@ -52,7 +52,7 @@ def get_general_info(db: Session = Depends(get_db)):
 def get_ranking(
     db: Session = Depends(get_db),
     typ: Union[str, None] = Query(default="public_bodies", max_length=15),
-    s: Union[str, None] = Query(default="Verspaetungsquote", max_length=25),
+    s: Union[str, None] = Query(default="Verspätungsquote", max_length=25),
     ascending: Union[bool, None] = Query(default=True),
 ):
     return cache_handler(
