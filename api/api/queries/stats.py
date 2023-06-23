@@ -1,26 +1,31 @@
-from sqlalchemy import func
+from sqlalchemy import funcy
 from api.models import FoiRequest, Message, PublicBody
 from sqlalchemy import select, cast, Float
+
 
 
 def resolved_(db, table, level, selection):
     if level is not None and selection is not None:
         stmt = (
-            select(func.count(table.id).label("value"))
+            select(cast(func.count(table.id), Float).label("value"))
             .where(getattr(table, level) == selection)
             .where(FoiRequest.status == "resolved")
             .group_by(FoiRequest.status)
         )
     else:
         stmt = (
-            select(func.count(table.id).label("value"))
+            select(cast(func.count(table.id), Float).label("value"))
             .where(FoiRequest.status == "resolved")
             .group_by(FoiRequest.status)
         )
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
-
-    return result[0][0]
+    print(f"RESULT.{result}")
+    if result:
+        result = result[0][0]
+    else:
+        result = 0
+    return result
 
 
 def group_by_count(db, table, column, level, selection):
@@ -94,7 +99,7 @@ def percentage_costs(db, level, selection):
     if level is None and selection is None:
         not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).subquery()
         stmt = select(
-            func.count(not_free.c.id.distinct()) / (cast(func.count(FoiRequest.id.distinct()), Float)) * 100
+            cast(func.count(not_free.c.id.distinct()), Float) / cast(func.count(FoiRequest.id.distinct()), Float) * 100
         ).join(not_free, not_free.c.id == FoiRequest.id, isouter=True)
     else:
         not_free = (
@@ -104,9 +109,21 @@ def percentage_costs(db, level, selection):
             .subquery()
         )
         stmt = (
-            select(func.count(not_free.c.id.distinct()) / (cast(func.count(FoiRequest.id.distinct()), Float)) * 100)
-            .join(not_free, not_free.c.id == FoiRequest.id, isouter=True)
-            .where(getattr(FoiRequest, level) == selection)
+            select(
+                case(
+                    (
+                        cast(func.count(not_free.c.id.distinct()), Float) > 0,
+                        (
+                            func.count(not_free.c.id.distinct())
+                            / (cast(func.count(FoiRequest.id.distinct()), Float))
+                            * 100
+                        ).label("percentage"),
+                    ),
+                    else_=cast(0, Float).label("percentage"),
+                )
+            )
+            #  func.count(not_free.c.id.distinct()) / (cast(func.count(FoiRequest.id.distinct()), Float)) * 100)
+            .join(not_free, not_free.c.id == FoiRequest.id, isouter=True).where(getattr(FoiRequest, level) == selection)
         )
 
     result = db.execute(stmt).fetchall()
@@ -141,7 +158,19 @@ def withdrew_costs(db, level, selection):
         )
 
     stmt = (
-        select(func.count(withdrawn.c.id.distinct()) / (cast(func.count(not_free.c.id.distinct()), Float)) * 100)
+        select(
+            case(
+                (
+                    cast(func.count(withdrawn.c.id.distinct()), Float) > 0,
+                    (
+                        cast(func.count(withdrawn.c.id.distinct()), Float)
+                        / (cast(func.count(not_free.c.id.distinct()), Float))
+                        * 100
+                    ).label("result"),
+                ),
+                else_=cast(0, Float).label("result"),
+            )
+        )
         .select_from(not_free)
         .join(withdrawn, not_free.c.id == withdrawn.c.id, isouter=True)
     )
@@ -153,18 +182,21 @@ def withdrew_costs(db, level, selection):
 
 def min_costs(db, level, selection):
     if level is None and selection is None:
-        stmt = select(func.min(FoiRequest.costs)).where(FoiRequest.costs != 0)
+        stmt = select(cast(func.min(FoiRequest.costs), Float)).where(FoiRequest.costs != 0)
 
     else:
         stmt = (
-            select(func.min(FoiRequest.costs))
+            select(cast(func.min(FoiRequest.costs), Float))
             .where(FoiRequest.costs != 0)
             .where(getattr(FoiRequest, level) == selection)
         )
-
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
-    return result[0][0]
+    if result is None:
+        result = 0
+    else:
+        result = result[0][0]
+    return result
 
 
 def max_costs(db, level, selection):
@@ -180,7 +212,11 @@ def max_costs(db, level, selection):
 
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
-    return result[0][0]
+    if result is None:
+        result = 0
+    else:
+        result = result[0][0]
+    return result
 
 
 def avg_costs(db, level, selection):
@@ -196,7 +232,11 @@ def avg_costs(db, level, selection):
 
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
-    return result[0][0]
+    if result is None:
+        result = 0
+    else:
+        result = result[0][0]
+    return result
 
 
 def overall_rates(db, level, selection):
@@ -255,9 +295,9 @@ def overall_rates(db, level, selection):
 
         final = select(
             stmt.c.Anzahl.label("Anzahl"),
-            (stmt.c.Anzahl_Erfolgreich / stmt.c.Anzahl * 100).label("Erfolgsquote"),
+            (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
             stmt.c.Fristueberschreitungen,
-            (stmt.c.Fristueberschreitungen / stmt.c.Anzahl * 100).label("Verspätungsquote"),
+            (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
         )
 
     elif level == "public_body_id":
@@ -274,9 +314,9 @@ def overall_rates(db, level, selection):
 
         final = select(
             stmt.c.Anzahl.label("Anzahl"),
-            (stmt.c.Anzahl_Erfolgreich / stmt.c.Anzahl * 100).label("Erfolgsquote"),
+            (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
             stmt.c.Fristueberschreitungen,
-            (stmt.c.Fristueberschreitungen / stmt.c.Anzahl * 100).label("Verspätungsquote"),
+            (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
         )
 
     elif level == "jurisdiction_id":
@@ -293,9 +333,9 @@ def overall_rates(db, level, selection):
 
         final = select(
             stmt.c.Anzahl.label("Anzahl"),
-            (stmt.c.Anzahl_Erfolgreich / stmt.c.Anzahl * 100).label("Erfolgsquote"),
+            (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
             stmt.c.Fristueberschreitungen,
-            (stmt.c.Fristueberschreitungen / stmt.c.Anzahl * 100).label("Verspätungsquote"),
+            (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
         )
     else:
         stmt = (
@@ -311,9 +351,9 @@ def overall_rates(db, level, selection):
 
         final = select(
             stmt.c.Anzahl.label("Anzahl"),
-            (stmt.c.Anzahl_Erfolgreich / stmt.c.Anzahl * 100).label("Erfolgsquote"),
+            (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
             stmt.c.Fristueberschreitungen,
-            (stmt.c.Fristueberschreitungen / stmt.c.Anzahl * 100).label("Verspätungsquote"),
+            (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
         )
 
     result = db.execute(final).fetchall()
