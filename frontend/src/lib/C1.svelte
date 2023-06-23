@@ -1,10 +1,12 @@
 <script>
-    import Card from "./Card.svelte";
     import { stats } from "../stores/stats.js";
-    import { formatAsPercent } from "./helpers/formatting";
+    import Balken from "./charts/Balken.svelte";
+    import Card from "./Card.svelte";
+    import { roundNumber } from "./helpers/formatting";
 </script>
-
-<Card title={"Wie teuer sind Anfragen?"}>
-    <p>Die Kosten, die <span class="h4">{formatAsPercent($stats.percentage_costs)}</span> der Anfragen generieren, verteilen sich folgendermaßen:</p>
+<Card title={"Wie schnell ist der Staat durchschnittlich?"}>
+    <ul>
+        <li> Bis zu eine ersten Antwort dauert es <span class="h4">{roundNumber($stats.initial_reaction_time,0)} Tage</span></li>
+        <li> Anfragen sind nach <span class="h4">{roundNumber($stats.resolved_time,0)} Tagen</span> abgeschlossen.</li>
+    </ul>
 </Card>
-

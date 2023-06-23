@@ -11,6 +11,8 @@ class Stats(BaseModel):
     dist_resolution: List[dict]
     dist_status: List[dict]
     requests_by_month: List[dict]
+    initial_reaction_time: timedelta
+    resolved_time: timedelta
     percentage_costs: float
     percentage_withdrawn: float
     min_costs: float
@@ -31,8 +33,3 @@ class Ranking(BaseModel):
 
 class CampaignStarts(BaseModel):
     campaign_starts: List[dict]
-
-
-class Reaction(BaseModel):
-    initial_reaction_time: timedelta
-    resolved_time: timedelta

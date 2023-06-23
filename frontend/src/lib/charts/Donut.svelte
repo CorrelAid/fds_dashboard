@@ -1,6 +1,8 @@
 <script>
     import Chart from "./Chart.svelte";
 
+   const colorPalette  = ["#0047e1","#4a84ff","#b6ddf5","#00cc99","#fad765","#fde9ae","#faa0a1","#ff4949"]
+
     export let data;
     export let height;
 
@@ -23,6 +25,7 @@
                 {
                     top: "-10%",
                     left: "-10%",
+                    color: colorPalette,
                     right: "-10%",
                     bottom: "5%",
                     type: "pie",
