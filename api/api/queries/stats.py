@@ -295,9 +295,17 @@ def overall_rates(db, level, selection):
 
         final = select(
             stmt.c.Anzahl.label("Anzahl"),
-            (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
-            stmt.c.Fristueberschreitungen,
-            (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
+            case(
+                cast(stmt.c.Anzahl_Erfolgreich, Float) > 0,
+                (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
+                else_=cast(0, Float).label("Erfolgsquote"),
+            ),
+            cast(stmt.c.Fristueberschreitungen, Float),
+            case(
+                cast(stmt.c.Fristueberschreitungen, Float) > 0,
+                (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
+                else_=cast(0, Float).label("Verspätungsquote"),
+            ),
         )
 
     elif level == "public_body_id":
