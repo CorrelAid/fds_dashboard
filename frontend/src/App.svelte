@@ -6,14 +6,14 @@
   import Filter from "./lib/Filter.svelte";
 
   import A from "./lib/A.svelte";
-  import A2 from "./lib/A2.svelte";
   import B1 from "./lib/B1.svelte";
   import B2 from "./lib/B2.svelte";
   import C1 from "./lib/C1.svelte";
   import C2 from "./lib/C2.svelte";
-  import D1 from "./lib/D1.svelte";
-  import D2 from "./lib/D2.svelte";
-  import D3 from "./lib/D3.svelte";
+  import D from "./lib/D.svelte";
+  import E1 from "./lib/E1.svelte";
+  import E2 from "./lib/E2.svelte";
+  import E3 from "./lib/E3.svelte";
 </script>
 
 <!-- Before rendering components, subscribe to store (make api call) and check if data is loaded -->
@@ -38,24 +38,24 @@
     <!-- B -->
     <div class="row">
       <div class="col p-3">
-        <A2 />
+        <B1 />
       </div>
       <div class="col p-3">
-        <B1 />
+        <B2 />
       </div>
     </div>
     <!-- C -->
     <div class="row">
       <div class="col p-3">
-        <B2 />
+        <C1 />
       </div>
       <div class="col p-3">
-        <C1 />
+        <C2 />
       </div>
     </div>
     <div class="row">
       <div class="col p-3">
-        <C2 />
+        <D />
       </div>
     </div>
   </div>
@@ -67,17 +67,17 @@
     </div>
     <div class="row">
       <div class="col p-3">
-        <D1 />
+        <E1 />
       </div>
     </div>
     <div class="row">
       <div class="col p-3">
-        <D2 />
+        <E2 />
       </div>
     </div>
     <div class="row">
       <div class="col p-3">
-        <D3 />
+        <E3 />
       </div>
     </div>
   </div>

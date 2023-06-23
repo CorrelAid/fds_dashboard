@@ -1,14 +1,18 @@
 <script>
     import { stats } from "../stores/stats.js";
-    import Balken from "./charts/Balken.svelte";
     import Card from "./Card.svelte";
-
+    import Donut from "./charts/Donut.svelte";
 </script>
-<Card title={"Wie schnell ist der Staat durchschnittlich?"}>
-    <ul>
-        <li> Bis zu eine ersten Antwort dauert es <span class="h4">3 Tage</span></li>
-        <li> Generell benötigt der Staat <span class="h4">5 Tage</span> um zu antworten.</li>
-        <li> Anfragen sind nach <span class="h4">30 Tagen</span> abgeschlossen.</li>
-        <li><span class="h4">34%</span> aller Anfragen werden verspätet abgeschlossen.</li>
-    </ul>
+
+<Card title={"Was ist der Status der momentan laufenden Anfragen?"}>
+<!-- <p>Von den <span class="h4">{$stats.foi_requests_not_resolved}</span> Anfragen, die aktuell bearbeitet werden,</p>
+
+<ul>
+    <li> warten <span class="h4">{$stats.dist_status.overdue}</span> noch auf eine Antwort.</li>
+    <li> sind <span class="h4">{$stats.dist_status.awaiting_response}</span> über der Frist.</li>
+    <li> sind <span class="h4">{$stats.dist_status.asleep}</span> eingeschlafen.</li>
+</ul> -->
+<Donut data = {$stats.dist_status}  height={400}/>
+
 </Card>
+

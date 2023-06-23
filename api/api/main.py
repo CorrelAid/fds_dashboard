@@ -2,13 +2,12 @@ from typing import Union
 from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from api.schemas import Stats, GeneralInfo, Ranking, CampaignStarts, Reaction
+from api.schemas import Stats, GeneralInfo, Ranking, CampaignStarts
 from api.database import SessionLocal
 from api.queries.general_info import query_general_info
 from api.queries.stats import query_stats
 from api.queries.rankings import query_ranking
 from api.queries.campaign_starts import query_campaign_starts
-from api.queries.reaction import query_reaction_time
 from api.cache import cache_handler
 
 
@@ -72,17 +71,6 @@ def get_campaign_starts(
     s: Union[int, None] = Query(default=None),
 ):
     return cache_handler(db, typ=typ, s=s, key="campaign_starts", query_function=query_campaign_starts)
-
-
-@app.get("/reaction_time", response_model=Reaction)
-def get_reaction_time(
-    db: Session = Depends(get_db),
-    typ: Union[str, None] = Query(default=None, max_length=15),
-    s: Union[int, None] = Query(default=None),
-):
-    return cache_handler(
-        db=db, typ=typ, s=s, ascending=None, key=f"reaction_time_{typ}_{s}", query_function=query_reaction_time
-    )
 
 
 # def start():
