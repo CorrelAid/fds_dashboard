@@ -23,6 +23,7 @@ POSTGRES_URL='postgresql://dagster:dagster@localhost:5435/main'
 REDIS_ADR='localhost'
 REDIS_PORT=6379
 REDIS_EXPIRE=5
+
 ```
 5. Run the project (while in api/api folder):
 ```
