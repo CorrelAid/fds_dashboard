@@ -33,16 +33,14 @@
                 source: data,
             },
             title: {
-                text: `${centerNumber} Anfragen abgeschlossen`,
+                text: `Abgeschlossen: ${centerNumber}`,
                 show: true,
                 right: "center",
                 top: "center",
-                textStyle:{
+                textStyle: {
                     width: 180,
-                overflow: "break",
+                    overflow: "break",
                 },
-               
-
             },
             series: [
                 {
