@@ -6,7 +6,7 @@
 </script>
 <Card title={"Wie schnell ist der Staat durchschnittlich?"}>
     <ul>
-        <li> Bis zu eine ersten Antwort dauert es <span class="h4">{roundNumber($stats.initial_reaction_time,0)} Tage</span></li>
-        <li> Anfragen sind nach <span class="h4">{roundNumber($stats.resolved_time,0)} Tagen</span> abgeschlossen.</li>
+        <li class="mb-2"> Bis zu eine ersten Antwort dauert es <span class="h5">{roundNumber($stats.initial_reaction_time,0)}</span> Tage</li>
+        <li class="mb-2"> Anfragen sind nach <span class="h5">{roundNumber($stats.resolved_time,0)}</span> Tagen abgeschlossen.</li>
     </ul>
 </Card>

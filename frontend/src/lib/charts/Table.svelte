@@ -47,7 +47,7 @@
       if (key != name) {
         values[key].selected = false;
         ar_cols[key].arrow_col = "arrow-blue"
-        console.log("Hu")
+
       }
     }}
   }
@@ -63,7 +63,7 @@ function handleHover(name, enter){
 </script>
 
 <table class="table">
-  <thead >
+  <thead class="bigger">
     <tr >
       {#each th as item}
         <th scope="col"
@@ -113,5 +113,7 @@ function handleHover(name, enter){
 </table>
 
 <style>
-  
+  .bigger tr th {
+    padding-bottom: 20px !important;
+  }
 </style>

@@ -2,6 +2,18 @@
     import * as echarts from "echarts";
     import { onMount, onDestroy } from "svelte";
 
+    const colorPalette = [
+        "#fd7f6f",
+        "#7eb0d5",
+        "#b2e061",
+        "#bd7ebe",
+        "#ffb55a",
+        "#ffee65",
+        "#beb9db",
+        "#fdcce5",
+        "#8bd3c7",
+    ];
+
     export let data;
     export let height;
 
@@ -13,35 +25,29 @@
     var option = {
         animation: false,
         legend: {},
-        tooltip: {
-            trigger: "axis",
-            axisPointer: {
-                type: "none",
-            },
-        },
-        grid: { left: "15%", bottom: "28%", right: "10%", top: "10%" },
-        color: ["#296dff"],
+        grid: { left: "0%", bottom: "0%", right: "0%", top: "0%" },
         dataset: {
             // Provide a set of data.
             dimensions: ["value", "name"],
             source: data,
         },
+        tooltip:{},
         xAxis: {
-            type: "category",
-            axisLabel: {
-                show: true,
-                interval: 0,
-                rotate: 45,
-            },
+            type: "value",
+            logBase: 12,
+            boundaryGap: [0, 0.01],
         },
-        yAxis: { type: "value" },
+        yAxis: {
+            type: "category",
+        },
         series: [
             {
+                
                 type: "bar",
                 barWidth: "75%",
                 encode: {
-                    x: "name",
-                    y: "value",
+                    y: "name",
+                    x: "value",
                     tooltip: ["value"],
                 },
             },

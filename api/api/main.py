@@ -29,15 +29,15 @@ def get_db():
 @app.get("/", response_model=Stats)
 def root(
     db: Session = Depends(get_db),
-    level: Union[str, None] = Query(default=None, max_length=15),
+    category: Union[str, None] = Query(default=None, max_length=15),
     selection: Union[int, None] = Query(default=None),
 ):
     return cache_handler(
         db=db,
-        level=level,
+        category=category,
         selection=selection,
         ascending=None,
-        key=f"stats_{level}_{selection}",
+        key=f"stats_{category}_{selection}",
         query_function=query_stats,
     )
 
@@ -74,7 +74,7 @@ def get_campaign_starts(
 
 
 # def start():
-#     """Launched with `poetry run start` at root level"""
+#     """Launched with `poetry run start` at root category"""
 #     # Generating sqlalchemy model
 #     generate_model(engine=engine, metadata=metadata, outfile='kn_fds_statistics_api/models.py')
 #     uvicorn.run("kn_fds_statistics_api.main:app", host="0.0.0.0", port=8000, reload=True)

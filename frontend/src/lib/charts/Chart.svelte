@@ -37,7 +37,6 @@
     });
 
     $: if (el) {
-        console.log("change");
         makeChart(el,options);
     }
 

@@ -29,47 +29,38 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-center align-items-center pt-4">
-                <ul class="nav nav-pills">
-                    <!-- <li class="nav-item">
-                      <button class="nav-link {$category=="all"?"active":""}" on:click={()=> {$category="all"}}>Alle</button>
-                    </li> -->
-                    <li class="nav-item">
-                        <button
-                            class="nav-link {$category == 'public_bodies'
-                                ? 'active'
-                                : ''}"
-                            on:click={() => {
-                                ($category = "public_bodies"),
-                                    (selected = ""),
-                                    ($term = "");
-                            }}>Behörden</button
-                        >
-                    </li>
-                    <li class="nav-item">
-                        <button
-                            class="nav-link {$category == 'jurisdictions'
-                                ? 'active'
-                                : ''}"
-                            on:click={() => {
-                                ($category = "jurisdictions"),
-                                    (selected = ""),
-                                    ($term = "");
-                            }}>Jurisdiktionen</button
-                        >
-                    </li>
-                    <li class="nav-item">
-                        <button
-                            class="nav-link {$category == 'campaigns'
-                                ? 'active'
-                                : ''}"
-                            on:click={() => {
-                                ($category = "campaigns"),
-                                    (selected = ""),
-                                    ($term = "");
-                            }}>Kampagnen</button
-                        >
-                    </li>
-                </ul>
+                <button
+                    class="me-3 btn {$category == 'public_bodies'
+                        ? 'btn-primary'
+                        : 'btn-outline-primary'}"
+                    on:click={() => {
+                        ($category = "public_bodies"),
+                            (selected = ""),
+                            ($term = "");
+                    }}><span class="h6">Behörden</span></button
+                >
+
+                <button
+                    class="me-3 btn {$category == 'jurisdictions'
+                        ? 'btn-primary'
+                        : 'btn-outline-primary'}"
+                    on:click={() => {
+                        ($category = "jurisdictions"),
+                            (selected = ""),
+                            ($term = "");
+                    }}><span class="h6">Jurisdiktionen</span></button
+                >
+
+                <button
+                    class=" btn {$category == 'campaigns'
+                        ? 'btn-primary'
+                        : 'btn-outline-primary'}"
+                    on:click={() => {
+                        ($category = "campaigns"),
+                            (selected = ""),
+                            ($term = "");
+                    }}><span class="h6">Kampagnen</span></button
+                >
             </div>
         </div>
 
@@ -112,10 +103,10 @@
                     </span>
                     <button
                         type="button"
-                        class="btn fw-normal btn-primary ms-3 h-100 d-flex justify-content-center align-items-center"
+                        class="btn fw-normal btn-primary ms-3 h-100"
                         on:click={() => {
                             set_url_params(selected);
-                        }}>Anzeigen</button
+                        }}><span class="h6">Anzeigen</span></button
                     >
                 </div>
 

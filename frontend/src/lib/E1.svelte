@@ -3,7 +3,7 @@
     import Table from "./charts/Table.svelte";
     import Card from "./Card.svelte";
     let values;
-    $: console.log($ranking_public_bodies)
+
 
     $: $values_public_bodies = values;
 </script>

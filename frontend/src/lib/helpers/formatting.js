@@ -1,8 +1,8 @@
-export function formatAsPercent(num) {
+export function formatAsPercent(num,places=2) {
     return new Intl.NumberFormat('default', {
       style: 'percent',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: places,
     }).format(num / 100);
   }
 
@@ -18,4 +18,15 @@ export function formatAsPercent(num) {
   export function roundNumber(num, decimalPlaces) {
     const factor = 10 ** decimalPlaces;
     return Math.round(num * factor) / factor;
+  }
+
+  export function formatGermanDate(date) {
+    const options = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    };
+  
+    const formattedDate = date.toLocaleString('de-DE', options);
+    return formattedDate;
   }

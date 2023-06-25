@@ -3,7 +3,7 @@
     import Table from "./charts/Table.svelte";
     import Card from "./Card.svelte";
     let values;
-    $: console.log($ranking_jurisdictions)
+  
 
     $: $values_jurisdictions = values;
 </script>
