@@ -1,30 +1,29 @@
-from sqlalchemy import func, case
+
+from sqlalchemy import func
 from api.models import FoiRequest, Message, PublicBody
-from sqlalchemy import select, cast, Float
+from sqlalchemy import select, cast, Float, case
 
 
-def resolved_(db, table, level, selection):
-    if level is not None and selection is not None:
-        stmt = (
-            select(cast(func.count(table.id), Float).label("value"))
-            .where(getattr(table, level) == selection)
-            .where(FoiRequest.status == "resolved")
-            .group_by(FoiRequest.status)
-        )
-    else:
-        stmt = (
-            select(cast(func.count(table.id), Float).label("value"))
-            .where(FoiRequest.status == "resolved")
-            .group_by(FoiRequest.status)
-        )
-    result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
-    print(f"RESULT.{result}")
-    if result:
-        result = result[0][0]
-    else:
-        result = 0
-    return result
+def translate(x):
+    translations = {
+        # Resolution
+        "user_withdrew": "Zurückgezogen",
+        "not_held": "Information nicht vorhanden",
+        "partially_successful": "Teilweise erfolgreich",
+        "successful": "Erfolgreich",
+        "refused": "Abgelehnt",
+        "user_withdrew_costs": "Wegen Kosten zurückgezogen",
+        "resolved": "Abgeschlossen",
+        "": "",  # Empty string key remains the same
+        # Status
+        "awaiting_response": "Wartet auf Antwort",
+        "overdue": "Antwort überfällig",
+        "asleep": "Eingeschlafen",
+        "awaiting_user_confirmation": "Wartet auf Nutzerbestätigung",
+        "publicbody_needed": "Behörde erforderlich",
+    }
+    return translations[x]
+
 
 
 def group_by_count(db, table, column, level, selection):
@@ -38,14 +37,15 @@ def group_by_count(db, table, column, level, selection):
     else:
         pre = select(column.label("name"), func.count(table.id).label("value")).group_by(column).subquery()
 
-    if column == FoiRequest.status:
-        stmt = select(pre.c.name, pre.c.value).where(pre.c.name != "resolved")
-    else:
         stmt = select(pre.c.name, pre.c.value)
 
     result = db.execute(stmt).fetchall()
 
-    result = [{"value": row[1], "name": row[0]} for row in result]
+    result = [{"value": row[1], "name": translate(row[0])} for row in result]
+
+    result = sorted(result, key=lambda x: x["value"], reverse=True)
+
+    print(result)
 
     return result
 
@@ -551,15 +551,37 @@ def resolved_time(db, level, selection):
 
 def query_stats(db, level, selection, ascending=None):
     foi_requests = request_count(db, FoiRequest, level=level, selection=selection)
-    resolved = resolved_(db, FoiRequest, level=level, selection=selection)
+
+    dist_resolution = group_by_count(db, FoiRequest, FoiRequest.resolution, level=level, selection=selection)
+    # removing foi requests that have no resolution. this number is actually higher than substracting
+    # foi_requests - resolved
+    # However,
+    # we are using the latter number as the number of unresolved foi requests
+    dist_resolution = [d for d in dist_resolution if d["name"] != ""]
+
+    # Summing up withdrawal and withdrawal due to costs because we have a separate statistic for that
+    withdrawn_sum = sum(
+        entry["value"] for entry in dist_resolution if entry["name"] in ["Zurückgezogen", "Wegen Kosten zurückgezogen"]
+    )
+    for entry in dist_resolution:
+        if entry["name"] == "Zurückgezogen":
+            entry["value"] = withdrawn_sum
+    dist_resolution = [d for d in dist_resolution if d["name"] != "Wegen Kosten zurückgezogen"]
+
+    # we are separating foi requests that are asleep  because it dominates the donut chart.
+    dist_status = group_by_count(db, FoiRequest, FoiRequest.status, level=level, selection=selection)
+    asleep = [d for d in dist_status if d["name"] == "Eingeschlafen"][0]["value"]
+    resolved = [d for d in dist_status if d["name"] == "Abgeschlossen"][0]["value"]
+    dist_status = [d for d in dist_status if d["name"] != "Abgeschlossen"]
 
     return {
         "foi_requests": foi_requests,
         "foi_requests_resolved": resolved,
         "foi_requests_not_resolved": foi_requests - resolved,
         "users": user_count(db, FoiRequest, level=level, selection=selection),
-        "dist_resolution": group_by_count(db, FoiRequest, FoiRequest.resolution, level=level, selection=selection),
-        "dist_status": group_by_count(db, FoiRequest, FoiRequest.status, level=level, selection=selection),
+        "dist_resolution": dist_resolution,
+        "dist_status": dist_status,
+        "status_asleep": asleep,
         "requests_by_month": requests_by_month(db, FoiRequest, FoiRequest.created_at, level=level, selection=selection),
         "initial_reaction_time": initial_reaction_time(db, level=level, selection=selection),
         "resolved_time": resolved_time(db, level=level, selection=selection),

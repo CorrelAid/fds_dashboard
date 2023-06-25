@@ -11,7 +11,6 @@ export const values_jurisdictions = writable();
 
 export const ranking_jurisdictions = derived(values_jurisdictions, ($values_jurisdictions, set) => {
     if ($values_jurisdictions != null){
-        console.log($values_jurisdictions)
         for (const key in $values_jurisdictions) {
             if ($values_jurisdictions[key].selected === true) {
                 let str = $values_jurisdictions[key].ascending.toString()

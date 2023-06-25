@@ -12,10 +12,10 @@
 <Card
     title={"Wie viele Anfragen wurden gestellt?"}
 >
-    <Line data={requests_by_month} y_labels={$campaign_starts.campaign_starts} height={300} />
+    <Line data={requests_by_month} x_labels={$campaign_starts.campaign_starts} height={300} />
     <br />
     <p>
-        <a href="https://fragdenstaat.de/anfragen/" class="h5"
+        <a href="https://fragdenstaat.de/anfragen/" class="btn btn-primary"
             >Anfragen entdecken</a
         >
     </p>

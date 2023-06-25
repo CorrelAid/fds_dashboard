@@ -11,7 +11,6 @@ export const values_campaigns = writable();
 
 export const ranking_campaigns = derived(values_campaigns, ($values_campaigns, set) => {
     if ($values_campaigns != null){
-        console.log($values_campaigns)
         for (const key in $values_campaigns) {
             if ($values_campaigns[key].selected === true) {
                 let str = $values_campaigns[key].ascending.toString()

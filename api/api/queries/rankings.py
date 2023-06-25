@@ -154,6 +154,7 @@ def ranking_public_body(db, s: str, ascending: bool):
             .order_by("Verspätungsquote")
             .limit(10)
         )
+    print(stmt)
     result = db.execute(stmt).fetchall()
     print(stmt)
     return to_dct(result)

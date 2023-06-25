@@ -11,7 +11,6 @@ export const values_public_bodies = writable();
 
 export const ranking_public_bodies = derived(values_public_bodies, ($values_public_bodies, set) => {
     if ($values_public_bodies != null){
-        console.log($values_public_bodies)
         for (const key in $values_public_bodies) {
             if ($values_public_bodies[key].selected === true) {
                 let str = $values_public_bodies[key].ascending.toString()
@@ -26,7 +25,7 @@ export const ranking_public_bodies = derived(values_public_bodies, ($values_publ
     }
     
     fetch(temp_endpoint).then(function (response) {
-        console.log(temp_endpoint)
+
         if (!response.ok) {
             throw new Error('unable to load data');
         }

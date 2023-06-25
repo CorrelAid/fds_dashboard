@@ -14,6 +14,7 @@ export const campaign_starts = readable({}, function start(set) {
     }
     ).then(function (data) {
         const starts = data
+        console.log(starts)
         set(starts)
     })
 

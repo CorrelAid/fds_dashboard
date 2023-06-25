@@ -2,20 +2,24 @@
     import Chart from "./Chart.svelte";
     export let data;
     export let height;
-    export let y_labels = [];
-
-
-    $: console.log(data);
-
+    export let x_labels = [];
+    import { formatGermanDate } from "../helpers/formatting";
     let options;
 
     const gen_options = (data) => {
         return {
             animation: false,
             legend: {},
-            tooltip: { trigger: "axis" },
-            grid: { left: "15%", bottom: "10%", right: "10%", top: "10%" },
-            color: ["#296dff"],
+            tooltip: {
+                trigger: "axis",
+                formatter: function (params) {
+                    params = params[0].data;
+                    var date = new Date(params.name);
+                    return `${formatGermanDate(date)}: <strong>${params.value}</strong>`;
+                },
+            },
+            grid: { left: "5%", bottom: "10%", right: "8%", top: "10%" },
+            color: ["#3f52d4"],
             dataset: {
                 // Provide a set of data.
                 dimensions: ["value", "name"],
@@ -33,16 +37,24 @@
                         tooltip: ["value"],
                     },
                     markLine: {
+                        silent: false,
+
                         symbol: "none",
                         lineStyle: {
                             color: "#333",
                             type: "solid",
                         },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                formatter: "{b}",
+                            },
+                        },
                         label: {
-                            show: true,
+                            show: false,
                             formatter: "{b}",
                         },
-                        data: y_labels,
+                        data: x_labels,
                     },
                     markPoint: {
                         data: [
@@ -52,10 +64,16 @@
                                 symbol: "circle",
                                 symbolSize: 10,
                                 label: {
-                                    position: "top",
+                                    position: "right",
                                     fontStyle: "bold",
+                                    fontFamilty: "inherit",
                                     fontSize: "16",
+                                    color: "#001c5a",
+                                    fontSize: 20
                                 },
+                                
+                                   
+                                
                             },
                         ],
                     },
@@ -63,7 +81,8 @@
             ],
         };
     };
-
 </script>
 
-<Chart options={gen_options(data)} {height} />
+{#if x_labels}
+    <Chart options={gen_options(data)} {height} />
+{/if}
