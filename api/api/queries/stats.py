@@ -32,10 +32,11 @@ def group_by_count(db, table, column, category, selection):
             .group_by(column)
             .subquery()
         )
+
     else:
         pre = select(column.label("name"), func.count(table.id).label("value")).group_by(column).subquery()
 
-        stmt = select(pre.c.name, pre.c.value)
+    stmt = select(pre.c.name, pre.c.value)
 
     result = db.execute(stmt).fetchall()
 
@@ -85,6 +86,7 @@ def user_count(db, table, category, selection):
 def request_count(db, table, category, selection):
     if category is not None and selection is not None:
         stmt = select(func.count(table.id.distinct())).where(getattr(table, category) == selection)
+
     else:
         stmt = select(func.count(table.id.distinct()))
     result = db.execute(stmt).fetchall()
@@ -198,7 +200,7 @@ def min_costs(db, category, selection):
         )
     result = db.execute(stmt).fetchall()
     result = [{"cost": row[1], "id": row[0]} for row in result]
-    if result[0]["id"] is None:
+    if result is None:
         result = [{"cost": 0, "id": None} for row in result]
     return result
 
@@ -222,7 +224,7 @@ def max_costs(db, category, selection):
         )
     result = db.execute(stmt).fetchall()
     result = [{"cost": row[1], "id": row[0]} for row in result]
-    if result[0]["id"] is None:
+    if result is None:
         result = [{"cost": 0, "id": None} for row in result]
     return result
 
