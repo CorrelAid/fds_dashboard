@@ -10,6 +10,6 @@
 
 {#if $ranking_campaigns}
 <Card title={"Kampagnen"}>
-    <Table data={$ranking_campaigns.ranking} bind:values/>
+    <Table data={$ranking_campaigns.ranking} bind:values type={"campaigns"}/>
 </Card>
 {/if}

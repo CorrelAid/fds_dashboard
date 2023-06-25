@@ -4,7 +4,7 @@ import {api_url} from "../lib/data/data.js"
 
 export const url_params = writable(null);
 
-const endpoint = `${api_url}/ranking?typ=jurisdictions`
+const endpoint = `${api_url}/ranking?category=jurisdictions`
 let temp_endpoint = endpoint;
 
 export const values_jurisdictions = writable();
@@ -15,7 +15,7 @@ export const ranking_jurisdictions = derived(values_jurisdictions, ($values_juri
             if ($values_jurisdictions[key].selected === true) {
                 let str = $values_jurisdictions[key].ascending.toString()
                 str = str.replace(str[0], str[0].toUpperCase())
-                temp_endpoint = `${endpoint}&ascending=${str}&s=${key}`
+                temp_endpoint = `${endpoint}&ascending=${str}&selection=${key}`
             }
           }
         

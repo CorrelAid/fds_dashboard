@@ -4,7 +4,7 @@ import {api_url} from "../lib/data/data.js"
 
 export const url_params = writable(null);
 
-const endpoint = `${api_url}/ranking?typ=public_bodies`
+const endpoint = `${api_url}/ranking?category=public_bodies`
 let temp_endpoint = endpoint;
 
 export const values_public_bodies = writable();
@@ -15,7 +15,7 @@ export const ranking_public_bodies = derived(values_public_bodies, ($values_publ
             if ($values_public_bodies[key].selected === true) {
                 let str = $values_public_bodies[key].ascending.toString()
                 str = str.replace(str[0], str[0].toUpperCase())
-                temp_endpoint = `${endpoint}&ascending=${str}&s=${key}`
+                temp_endpoint = `${endpoint}&ascending=${str}&selection=${key}`
             }
           }
         

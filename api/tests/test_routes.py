@@ -41,33 +41,33 @@ def test_general_info():
 
 
 def test_ranking_campaigns():
-    response = client.get("/ranking?typ=campaigns")
+    response = client.get("/ranking?category=campaigns")
     assert response.status_code == 200
     temp = response.json()
     assert isinstance(temp, dict)
-    response = client.get("/ranking?typ=campaigns&ascending=True&s=Anzahl")
+    response = client.get("/ranking?category=campaigns&ascending=True&selection=Anzahl")
     assert response.status_code == 200
     temp = response.json()
     assert isinstance(temp, dict)
 
 
 def test_ranking_jurisdictions():
-    response = client.get("/ranking?typ=jurisdictions")
+    response = client.get("/ranking?category=jurisdictions")
     assert response.status_code == 200
     temp = response.json()
     assert isinstance(temp, dict)
-    response = client.get("/ranking?typ=public_bodies&ascending=True&s=Anzahl")
+    response = client.get("/ranking?category=public_bodies&ascending=True&selection=Anzahl")
     assert response.status_code == 200
     temp = response.json()
     assert isinstance(temp, dict)
 
 
 def test_ranking_public_bodies():
-    response = client.get("/ranking?typ=public_bodies")
+    response = client.get("/ranking?category=public_bodies")
     assert response.status_code == 200
     temp = response.json()
     assert isinstance(temp, dict)
-    response = client.get("/ranking?typ=public_bodies&ascending=True&s=Anzahl")
+    response = client.get("/ranking?category=public_bodies&ascending=True&selection=Anzahl")
     assert response.status_code == 200
     temp = response.json()
     assert isinstance(temp, dict)

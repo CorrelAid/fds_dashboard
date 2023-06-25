@@ -10,6 +10,6 @@
 
 {#if $ranking_jurisdictions}
 <Card title={"Jurisdiktionen"}>
-    <Table data={$ranking_jurisdictions.ranking} bind:values/>
+    <Table data={$ranking_jurisdictions.ranking} bind:values type={"jurisdictions"}/>
 </Card>
 {/if}

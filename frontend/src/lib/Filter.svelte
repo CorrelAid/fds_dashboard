@@ -4,6 +4,7 @@
     import Dropdown from "./svg/Dropdown.svelte";
     import { url_params } from "../stores/stats.js";
     import { term, category, filtered } from "../stores/general_info.js";
+    import {set_url_params} from "./helpers/urlOps";
     let show = "";
     let selection = null;
 
@@ -11,18 +12,6 @@
         show == "" ? (show = "show") : (show = "");
     };
 
-    function set_url_params(selection) {
-        if (selection != null) {
-            const tr = {
-                jurisdictions: "jurisdiction_id",
-                public_bodies: "public_body_id",
-                campaigns: "campaign_id",
-            };
-            $url_params = `?category=${tr[$category]}&selection=${selection}`;
-        } else {
-            $url_params = "";
-        }
-    }
 </script>
 
 <div class="container">
@@ -105,7 +94,7 @@
                         type="button"
                         class="btn fw-normal btn-primary ms-3 h-100"
                         on:click={() => {
-                            set_url_params(selection);
+                            $url_params = set_url_params(selection, $category);
                         }}><span class="h6">Anzeigen</span></button
                     >
                 </div>

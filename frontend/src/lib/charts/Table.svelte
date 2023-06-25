@@ -1,9 +1,11 @@
 <script>
   export let data;
   import { formatAsPercent } from "../helpers/formatting";
-  import { values_campaigns } from "../../stores/ranking_campaigns";
   import ArrowDown from "../svg/ArrowDown.svelte";
   import ArrowUp from "../svg/ArrowUp.svelte";
+  import { general_info,term } from "../../stores/general_info.js";
+  import {set_url_params} from "../helpers/urlOps";
+  import { url_params } from "../../stores/stats.js";
 
   export let values = {
     Anzahl: { ascending: false, selected: true },
@@ -12,12 +14,14 @@
     Erfolgsquote: { ascending: true, selected: false },
   };
 
-  const ar_cols ={
+  export let type;
+
+  const ar_cols = {
     Anzahl: { arrow_col: "arrow-white" },
-    Verspätungsquote:  { arrow_col: "arrow-blue" },
-    Erfolgreich:  { arrow_col: "arrow-blue" },
+    Verspätungsquote: { arrow_col: "arrow-blue" },
+    Erfolgreich: { arrow_col: "arrow-blue" },
     Erfolgsquote: { arrow_col: "arrow-blue" },
-  }
+  };
 
   const arrow_size = 20;
 
@@ -30,87 +34,109 @@
     { name: "Erfolgsquote" },
   ];
 
-  
-
-  function handleClick(name,item) {
-    if (item.descending_only !== true){
-    values[name].ascending === true && values[name].selected === true
-      ? (values[name].ascending = false)
-      : (values[name].ascending = true);
+  function handleClick(name, item) {
+    if (item.descending_only !== true) {
+      values[name].ascending === true && values[name].selected === true
+        ? (values[name].ascending = false)
+        : (values[name].ascending = true);
     }
     // only change selecred when
-    if (values[name].selected !== true){
-    values[name].selected = true;
-    ar_cols[name].arrow_col = "arrow-white"
+    if (values[name].selected !== true) {
+      values[name].selected = true;
+      ar_cols[name].arrow_col = "arrow-white";
 
-    for (const key in values) {
-      if (key != name) {
-        values[key].selected = false;
-        ar_cols[key].arrow_col = "arrow-blue"
-
+      for (const key in values) {
+        if (key != name) {
+          values[key].selected = false;
+          ar_cols[key].arrow_col = "arrow-blue";
+        }
       }
-    }}
+    }
   }
-function handleHover(name, enter){
-  
-  if(values[name].selected !== true){
-   
-  enter === true ? ar_cols[name].arrow_col = "arrow-white" : ar_cols[name].arrow_col = "arrow-blue"
+  function handleHover(name, enter) {
+    if (values[name].selected !== true) {
+      enter === true
+        ? (ar_cols[name].arrow_col = "arrow-white")
+        : (ar_cols[name].arrow_col = "arrow-blue");
+    }
   }
-  
-}
 
+  function getid(name){
+    console.log(name,type)
+    const temp = $general_info[type].find((obj) => obj.name === name).id
+    console.log(temp)
+    return temp
+  }
+  function handleLinkClick(name){
+    const id = getid(name)
+    $url_params = set_url_params(id,type)
+    $term = name
+
+  }
 </script>
 
-<table class="table">
-  <thead class="bigger">
-    <tr >
-      {#each th as item}
-        <th scope="col"
-          ><span class="">
-            {#if values[item.name]}
-              <button
-                class="{ar_cols[item.name].arrow_col} d-flex align-items-center btn {values[item.name]
-                  .selected === true
-                  ? 'btn-primary'
-                  : 'btn-outline-primary'} " 
-                on:click={() => handleClick(item.name,item)}
-                on:mouseover={() => handleHover(item.name, true)} on:mouseout={() => handleHover(item.name, false)}
-                on:focus={() => handleHover(item.name, true)} on:blur={() => handleHover(item.name, false)}
-              >
-                {item.name}
-                {#if values[item.name].ascending === false | item.descending_only === true}
-                  <span class="mb-1 arrow"
-                    ><ArrowDown width={arrow_size} height={arrow_size} /></span
-                  >{/if}
-
-                {#if values[item.name].ascending === true}
-                  <span class="mb-1 arrow"
-                    ><ArrowUp width={arrow_size} height={arrow_size} /></span
-                  >
-                {/if}
-              </button>
-            {:else}
-              {item.name}
-            {/if}
-          </span></th
-        >
-      {/each}
-    </tr>
-  </thead>
-  <tbody>
-    {#each data as row, i}
+{#if $general_info.jurisdictions}
+  <table class="table">
+    <thead class="bigger">
       <tr>
-        <th scope="row">{i + 1}</th>
-        <td>{row.name}</td>
-        <td>{row.number}</td>
-        <td>{formatAsPercent(row.overdue_rate)}</td>
-        <td>{row.successful}</td>
-        <td>{formatAsPercent(row.success_rate)}</td>
+        {#each th as item}
+          <th scope="col"
+            ><span class="">
+              {#if values[item.name]}
+                <button
+                  class="{ar_cols[item.name]
+                    .arrow_col} d-flex align-items-center btn {values[item.name]
+                    .selected === true
+                    ? 'btn-primary'
+                    : 'btn-outline-primary'} "
+                  on:click={() => handleClick(item.name, item)}
+                  on:mouseover={() => handleHover(item.name, true)}
+                  on:mouseout={() => handleHover(item.name, false)}
+                  on:focus={() => handleHover(item.name, true)}
+                  on:blur={() => handleHover(item.name, false)}
+                >
+                  {item.name}
+                  {#if (values[item.name].ascending === false) | (item.descending_only === true)}
+                    <span class="mb-1 arrow"
+                      ><ArrowDown
+                        width={arrow_size}
+                        height={arrow_size}
+                      /></span
+                    >{/if}
+
+                  {#if values[item.name].ascending === true}
+                    <span class="mb-1 arrow"
+                      ><ArrowUp width={arrow_size} height={arrow_size} /></span
+                    >
+                  {/if}
+                </button>
+              {:else}
+                {item.name}
+              {/if}
+            </span></th
+          >
+        {/each}
       </tr>
-    {/each}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {#each data as row, i}
+        <tr>
+          <th scope="row">{i + 1}</th>
+          <td
+            ><a href="#top"
+              on:click={() => handleLinkClick(row.name)}
+              >{row.name}</a
+            ></td
+          >
+          <td>{row.number}</td>
+          <td>{formatAsPercent(row.overdue_rate)}</td>
+          <td>{row.successful}</td>
+          <td>{formatAsPercent(row.success_rate)}</td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+{/if}
 
 <style>
   .bigger tr th {
