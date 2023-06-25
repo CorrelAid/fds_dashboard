@@ -65,14 +65,16 @@ def proc_dist_resolution(dist_resolution):
             entry["value"] = withdrawn_sum
     # translate name and filter our user_withdrew_costs
     dist_resolution = [
-        {translate(d["name"]): d["value"]} for d in dist_resolution if d["name"] != "user_withdrew_costs"
+        {"name": translate(d["name"]), "value": d["value"]}
+        for d in dist_resolution
+        if d["name"] != "user_withdrew_costs"
     ]
     return dist_resolution
 
 
 def proc_dist_status(dist_status):
     # removing status == resolved
-    dist_status = [{translate(d["name"]): d["value"]} for d in dist_status if d["name"] != "resolved"]
+    dist_status = [{"name": translate(d["name"]), "value": d["value"]} for d in dist_status if d["name"] != "resolved"]
     return dist_status
 
 

@@ -4,7 +4,6 @@
     export let height;
     export let x_labels = [];
     import { formatGermanDate } from "../helpers/formatting";
-    let options;
 
     const gen_options = (data) => {
         return {

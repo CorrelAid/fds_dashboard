@@ -5,20 +5,20 @@
     import { url_params } from "../stores/stats.js";
     import { term, category, filtered } from "../stores/general_info.js";
     let show = "";
-    let selected = null;
+    let selection = null;
 
     const toggle = () => {
         show == "" ? (show = "show") : (show = "");
     };
 
-    function set_url_params(selected) {
-        if (selected != null) {
+    function set_url_params(selection) {
+        if (selection != null) {
             const tr = {
                 jurisdictions: "jurisdiction_id",
                 public_bodies: "public_body_id",
                 campaigns: "campaign_id",
             };
-            $url_params = `?l=${tr[$category]}&s=${selected}`;
+            $url_params = `?category=${tr[$category]}&selection=${selection}`;
         } else {
             $url_params = "";
         }
@@ -35,7 +35,7 @@
                         : 'btn-outline-primary'}"
                     on:click={() => {
                         ($category = "public_bodies"),
-                            (selected = ""),
+                            (selection = ""),
                             ($term = "");
                     }}><span class="h6">Behörden</span></button
                 >
@@ -46,7 +46,7 @@
                         : 'btn-outline-primary'}"
                     on:click={() => {
                         ($category = "jurisdictions"),
-                            (selected = ""),
+                            (selection = ""),
                             ($term = "");
                     }}><span class="h6">Jurisdiktionen</span></button
                 >
@@ -57,7 +57,7 @@
                         : 'btn-outline-primary'}"
                     on:click={() => {
                         ($category = "campaigns"),
-                            (selected = ""),
+                            (selection = ""),
                             ($term = "");
                     }}><span class="h6">Kampagnen</span></button
                 >
@@ -105,7 +105,7 @@
                         type="button"
                         class="btn fw-normal btn-primary ms-3 h-100"
                         on:click={() => {
-                            set_url_params(selected);
+                            set_url_params(selection);
                         }}><span class="h6">Anzeigen</span></button
                     >
                 </div>
@@ -117,14 +117,14 @@
                     <span
                         class="dropdown-item"
                         on:click={() => {
-                            (selected = null), (show = ""), ($term = "");
+                            (selection = null), (show = ""), ($term = "");
                         }}>Alle</span
                     >
                     {#each $filtered as item}
                         <span
                             class="dropdown-item"
                             on:click={() => {
-                                (selected = item.id),
+                                (selection = item.id),
                                     (show = ""),
                                     ($term = item.name);
                             }}>{item.name}</span
