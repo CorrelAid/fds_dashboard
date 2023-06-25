@@ -1,6 +1,6 @@
 from sqlalchemy import func
 from api.models import FoiRequest, PublicBody, Jurisdiction, Campaign, Message
-from sqlalchemy import select, asc, desc, cast, Float, case, or_
+from sqlalchemy import select, asc, desc, cast, Float, case, or_, nullslast
 
 
 def to_dct(result):
@@ -131,7 +131,7 @@ def ranking_public_body(db, s: str, ascending: bool):
             .join(late, late.c.public_body_id == PublicBody.id, isouter=True)
             .where(total_num.c.public_body_id == resolved.c.public_body_id)
             .where(total_num.c.count > 20)
-            .order_by(ordering(s))
+            .order_by(nullslast(ordering(s)))
             .limit(10)
         )
     else:
@@ -151,7 +151,7 @@ def ranking_public_body(db, s: str, ascending: bool):
             .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
             .where(total_num.c.public_body_id == resolved.c.public_body_id)
             .where(total_num.c.count > 20)
-            .order_by("Verspätungsquote")
+            .order_by(nullslast("Verspätungsquote"))
             .limit(10)
         )
     result = db.execute(stmt).fetchall()
@@ -186,7 +186,7 @@ def ranking_jurisdictions(db, s: str, ascending: bool):
             .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
             .where(total_num.c.public_body_id == resolved.c.public_body_id)
             .group_by(Jurisdiction.name)
-            .order_by(ordering(s))
+            .order_by(nullslast(ordering(s)))
             .limit(10)
         )
     else:
@@ -209,7 +209,7 @@ def ranking_jurisdictions(db, s: str, ascending: bool):
             .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
             .where(total_num.c.public_body_id == resolved.c.public_body_id)
             .group_by(Jurisdiction.name)
-            .order_by(s)
+            .order_by(nullslast("Verspätungsquote"))
             .limit(10)
         )
     result = db.execute(stmt).fetchall()
@@ -313,7 +313,7 @@ def ranking_campaign(db, s: str, ascending: bool):
                 late.c.count,
                 successful.c.count,
             )
-            .order_by(ordering(s))
+            .order_by(nullslast(ordering(s)))
             .limit(10)
         )
     else:
@@ -333,7 +333,7 @@ def ranking_campaign(db, s: str, ascending: bool):
             .join(successful, successful.c.campaign_id == Campaign.id, isouter=True)
             .where(total_num.c.campaign_id == resolved.c.campaign_id)
             .where(total_num.c.count > 20)
-            .order_by("Verspätungsquote")
+            .order_by(nullslast("Verspätungsquote"))
             .limit(10)
         )
 
