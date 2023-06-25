@@ -10,16 +10,15 @@ class Stats(BaseModel):
     users: int
     dist_resolution: List[dict]
     dist_status: List[dict]
-    status_asleep: int
-    requests_by_month: List[dict]
-    initial_reaction_time: timedelta
-    resolved_time: timedelta
     percentage_costs: float
     percentage_withdrawn: float
-    min_costs: List[dict]
-    max_costs: List[dict]
+    max_costs: dict
     avg_costs: float
-    success_rate: dict
+    overdue_total: int
+    overdue_rate: float
+    initial_reaction_time: timedelta
+    resolved_time: timedelta
+    requests_by_month: List[dict]
 
 
 class GeneralInfo(BaseModel):

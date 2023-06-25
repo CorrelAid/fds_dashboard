@@ -29,7 +29,7 @@ def get_db():
 @app.get("/", response_model=Stats)
 def root(
     db: Session = Depends(get_db),
-    category: Union[str, None] = Query(default=None, max_length=15),
+    category: Union[str, None] = Query(default=None, regex="^(public_body_id|jurisdiction_id|campaign_id)$"),
     selection: Union[int, None] = Query(default=None),
 ):
     return cache_handler(
@@ -50,7 +50,7 @@ def get_general_info(db: Session = Depends(get_db)):
 @app.get("/ranking", response_model=Ranking)
 def get_ranking(
     db: Session = Depends(get_db),
-    typ: Union[str, None] = Query(default="public_bodies", max_length=15),
+    category: Union[str, None] = Query(default="public_bodies", max_length=15),
     s: Union[str, None] = Query(default="Verspätungsquote", max_length=25),
     ascending: Union[bool, None] = Query(default=True),
 ):
@@ -58,8 +58,8 @@ def get_ranking(
         db,
         s=s,
         ascending=ascending,
-        key=f"ranking_{typ}_{s}_{ascending}",
-        typ=typ,
+        key=f"ranking_{category}_{s}_{ascending}",
+        category=category,
         query_function=query_ranking,
     )
 

@@ -1,6 +1,37 @@
 from sqlalchemy import func
 from api.models import FoiRequest, Message, PublicBody
-from sqlalchemy import select, cast, Float, case
+from sqlalchemy import select, cast, Float, desc
+
+
+def request_count(db, table, category=None, selection=None):
+    stmt = select(func.count(table.id.distinct()))
+
+    if category is not None and selection is not None:
+        stmt = stmt.where(getattr(table, category) == selection)
+
+    result = db.execute(stmt).fetchone()
+    count = result[0] if result else 0
+    return count
+
+
+def group_by_count(db, table, column, category=None, selection=None):
+    stmt = select(column.label("name"), func.count(table.id).label("value"))
+
+    if category is not None and selection is not None:
+        stmt = stmt.where(getattr(table, category) == selection)
+
+    if column == FoiRequest.resolution:
+        stmt = stmt.where(FoiRequest.status == "resolved")
+
+    stmt = stmt.group_by(column)
+
+    result = db.execute(stmt).fetchall()
+
+    result = [{"value": row[1], "name": row[0]} for row in result]
+
+    result = sorted(result, key=lambda x: x["value"], reverse=True)
+
+    return result
 
 
 def translate(x):
@@ -13,7 +44,7 @@ def translate(x):
         "refused": "Abgelehnt",
         "user_withdrew_costs": "Wegen Kosten zurückgezogen",
         "resolved": "Abgeschlossen",
-        "": "",  # Empty string key remains the same
+        "": "Unbekannt",  # Empty string key remains the same
         # Status
         "awaiting_response": "Wartet auf Antwort",
         "overdue": "Antwort überfällig",
@@ -24,45 +55,44 @@ def translate(x):
     return translations[x]
 
 
-def group_by_count(db, table, column, category, selection):
+def proc_dist_resolution(dist_resolution):
+    # summing up withdrawal reasons and add to user_withdrew
+    withdrawn_sum = sum(
+        entry["value"] for entry in dist_resolution if entry["name"] in ["user_withdrew", "user_withdrew_costs"]
+    )
+    for entry in dist_resolution:
+        if entry["name"] == "user_withdrew":
+            entry["value"] = withdrawn_sum
+    # translate name and filter our user_withdrew_costs
+    dist_resolution = [
+        {translate(d["name"]): d["value"]} for d in dist_resolution if d["name"] != "user_withdrew_costs"
+    ]
+    return dist_resolution
+
+
+def proc_dist_status(dist_status):
+    # removing status == resolved
+    dist_status = [{translate(d["name"]): d["value"]} for d in dist_status if d["name"] != "resolved"]
+    return dist_status
+
+
+def proc_resolved(dist_status):
+    try:
+        return [d for d in dist_status if d["name"] == "resolved"][0]["value"]
+    except IndexError:
+        return 0
+
+
+def requests_by_month(db, table, column, category=None, selection=None):
+    stmt = (
+        select(func.date_trunc("month", column), func.count(table.id))
+        .group_by(func.date_trunc("month", column))
+        .order_by(func.date_trunc("month", column))
+    )
+
     if category is not None and selection is not None:
-        pre = (
-            select(column.label("name"), func.count(table.id).label("value"))
-            .where(getattr(table, category) == selection)
-            .group_by(column)
-            .subquery()
-        )
+        stmt = stmt.where(getattr(table, category) == selection)
 
-    else:
-        pre = select(column.label("name"), func.count(table.id).label("value")).group_by(column).subquery()
-
-    stmt = select(pre.c.name, pre.c.value)
-
-    result = db.execute(stmt).fetchall()
-
-    result = [{"value": row[1], "name": translate(row[0])} for row in result]
-
-    result = sorted(result, key=lambda x: x["value"], reverse=True)
-
-    print(result)
-
-    return result
-
-
-def requests_by_month(db, table, column, category, selection):
-    if category is not None and selection is not None:
-        stmt = (
-            select(func.date_trunc("month", column), func.count(table.id))
-            .where(getattr(table, category) == selection)
-            .group_by(func.date_trunc("month", column))
-            .order_by(func.date_trunc("month", column))
-        )
-    else:
-        stmt = (
-            select(func.date_trunc("month", column), func.count(table.id))
-            .group_by(func.date_trunc("month", column))
-            .order_by(func.date_trunc("month", column))
-        )
     result = db.execute(stmt).fetchall()
     lst = []
     value = 0
@@ -73,186 +103,88 @@ def requests_by_month(db, table, column, category, selection):
     return lst
 
 
-def user_count(db, table, category, selection):
+def user_count(db, table, category=None, selection=None):
+    stmt = select(func.count(table.user_id.distinct()))
+
     if category is not None and selection is not None:
-        stmt = select(func.count(table.user_id.distinct())).where(getattr(table, category) == selection)
-    else:
-        stmt = select(func.count(table.user_id.distinct()))
-    result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
-    return result[0][0]
+        stmt = stmt.where(getattr(table, category) == selection)
 
-
-def request_count(db, table, category, selection):
-    if category is not None and selection is not None:
-        stmt = select(func.count(table.id.distinct())).where(getattr(table, category) == selection)
-
-    else:
-        stmt = select(func.count(table.id.distinct()))
-    result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
-    return result[0][0]
+    result = db.execute(stmt).scalar()
+    return result
 
 
 def percentage_costs(db, category, selection):
-    if category is None and selection is None:
-        not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).subquery()
-        stmt = select(
-            cast(func.count(not_free.c.id.distinct()), Float) / cast(func.count(FoiRequest.id.distinct()), Float) * 100
-        ).join(not_free, not_free.c.id == FoiRequest.id, isouter=True)
-    else:
-        not_free = (
-            select(FoiRequest.id)
-            .where(FoiRequest.costs != 0.0)
-            .where(getattr(FoiRequest, category) == selection)
-            .subquery()
-        )
-        stmt = (
-            select(
-                case(
-                    (
-                        cast(func.count(not_free.c.id.distinct()), Float) > 0,
-                        (
-                            func.count(not_free.c.id.distinct())
-                            / (cast(func.count(FoiRequest.id.distinct()), Float))
-                            * 100
-                        ).label("percentage"),
-                    ),
-                    else_=cast(0, Float).label("percentage"),
-                )
-            )
-            #  func.count(not_free.c.id.distinct()) / (cast(func.count(FoiRequest.id.distinct()), Float)) * 100)
-            .join(not_free, not_free.c.id == FoiRequest.id, isouter=True).where(
-                getattr(FoiRequest, category) == selection
-            )
-        )
+    not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0)
 
-    result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
-    return result[0][0]
+    if category is not None and selection is not None:
+        not_free = not_free.where(getattr(FoiRequest, category) == selection)
+
+    total_count = db.scalar(select(func.count(FoiRequest.id.distinct())))
+    not_free_count = db.scalar(select(func.count(not_free.subquery().c.id.distinct())))
+
+    if total_count == 0:
+        percentage = 0
+    else:
+        percentage = (not_free_count / total_count) * 100
+
+    return percentage
 
 
 def withdrew_costs(db, category, selection):
-    if category is None and selection is None:
-        not_free = select(FoiRequest.id).where(FoiRequest.costs != 0.0).subquery()
-        withdrawn = (
-            select(FoiRequest.id)
-            .where(FoiRequest.costs != 0.0)
-            .where(FoiRequest.resolution == "user_withdrew_costs")
-            .subquery()
-        )
-
-    else:
-        not_free = (
-            select(FoiRequest.id)
-            .where(FoiRequest.costs != 0.0)
-            .where(getattr(FoiRequest, category) == selection)
-            .subquery()
-        )
-
-        withdrawn = (
-            select(FoiRequest.id)
-            .where(FoiRequest.costs != 0.0)
-            .where(FoiRequest.resolution == "user_withdrew_costs")
-            .where(getattr(FoiRequest, category) == selection)
-            .subquery()
-        )
-
-    stmt = (
-        select(
-            case(
-                (
-                    cast(func.count(withdrawn.c.id.distinct()), Float) > 0,
-                    (
-                        cast(func.count(withdrawn.c.id.distinct()), Float)
-                        / (cast(func.count(not_free.c.id.distinct()), Float))
-                        * 100
-                    ).label("result"),
-                ),
-                else_=cast(0, Float).label("result"),
-            )
-        )
-        .select_from(not_free)
-        .join(withdrawn, not_free.c.id == withdrawn.c.id, isouter=True)
+    not_free_stmt = select(func.count(FoiRequest.id)).where(FoiRequest.costs != 0.0)
+    withdrawn_stmt = (
+        select(func.count(FoiRequest.id))
+        .where(FoiRequest.costs != 0.0)
+        .where(FoiRequest.resolution == "user_withdrew_costs")
     )
 
-    result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
-    return result[0][0]
+    if category is not None and selection is not None:
+        not_free_stmt = not_free_stmt.where(getattr(FoiRequest, category) == selection)
+        withdrawn_stmt = withdrawn_stmt.where(getattr(FoiRequest, category) == selection)
 
+    not_free_count = db.execute(not_free_stmt).scalar()
+    withdrawn_count = db.execute(withdrawn_stmt).scalar()
 
-def min_costs(db, category, selection):
-    if category is None and selection is None:
-        min = select(cast(func.min(FoiRequest.costs), Float)).where(FoiRequest.costs != 0)
-
-        stmt = select(FoiRequest.id, cast(FoiRequest.costs, Float)).filter(FoiRequest.costs.in_(min))
+    if not_free_count == 0:
+        result = 0
     else:
-        min = (
-            select(cast(func.min(FoiRequest.costs), Float))
-            .where(FoiRequest.costs != 0)
-            .where(getattr(FoiRequest, category) == selection)
-        )
-        stmt = (
-            select(FoiRequest.id, cast(FoiRequest.costs, Float))
-            .filter(FoiRequest.costs.in_(min))
-            .where(FoiRequest.costs != 0)
-            .where(getattr(FoiRequest, category) == selection)
-        )
-    result = db.execute(stmt).fetchall()
-    result = [{"cost": row[1], "id": row[0]} for row in result]
-    if result is None:
-        result = [{"cost": 0, "id": None} for row in result]
+        result = (withdrawn_count / not_free_count) * 100
+
     return result
 
 
 def max_costs(db, category, selection):
-    if category is None and selection is None:
-        max = select(cast(func.max(FoiRequest.costs), Float)).where(FoiRequest.costs != 0)
+    stmt = select(FoiRequest.id, cast(FoiRequest.costs, Float)).where(FoiRequest.costs != 0)
 
-        stmt = select(FoiRequest.id, cast(FoiRequest.costs, Float)).filter(FoiRequest.costs.in_(max))
-    else:
-        max = (
-            select(cast(func.max(FoiRequest.costs), Float))
-            .where(FoiRequest.costs != 0)
-            .where(getattr(FoiRequest, category) == selection)
-        )
-        stmt = (
-            select(FoiRequest.id, cast(FoiRequest.costs, Float))
-            .filter(FoiRequest.costs.in_(max))
-            .where(FoiRequest.costs != 0)
-            .where(getattr(FoiRequest, category) == selection)
-        )
-    result = db.execute(stmt).fetchall()
-    result = [{"cost": row[1], "id": row[0]} for row in result]
+    if category is not None and selection is not None:
+        stmt = stmt.where(getattr(FoiRequest, category) == selection)
+
+    stmt = stmt.order_by(desc(FoiRequest.costs)).limit(1)
+    result = db.execute(stmt).fetchone()
     if result is None:
-        result = [{"cost": 0, "id": None} for row in result]
+        result = {"cost": 0, "id": None}
+    else:
+        result = {"cost": result[1], "id": result[0]}
+
     return result
 
 
 def avg_costs(db, category, selection):
-    if category is None and selection is None:
-        stmt = select(func.avg(FoiRequest.costs)).where(FoiRequest.costs != 0)
+    stmt = select(func.avg(FoiRequest.costs)).where(FoiRequest.costs != 0)
+    if category is not None and selection is not None:
+        stmt = stmt.where(getattr(FoiRequest, category) == selection)
 
-    else:
-        stmt = (
-            select(func.avg(FoiRequest.costs))
-            .where(FoiRequest.costs != 0)
-            .where(getattr(FoiRequest, category) == selection)
-        )
+    result = db.execute(stmt).scalar()
 
-    result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
-    if result[0][0] is None:
+    if result is None:
         result = 0
-    else:
-        result = result[0][0]
     return result
 
 
-def overall_rates(db, category, selection):
+def overdue_requests(db, category, selection):
     resolved_mess = (
         select(Message.foi_request_id.distinct().label("foi_request_id"))
-        .filter(Message.status.in_(["resolved", "partially_successful", "successful"]))
+        .filter(Message.status.in_(["resolved"]))
         .subquery()
     )
 
@@ -290,82 +222,25 @@ def overall_rates(db, category, selection):
         .subquery()
     )
 
-    if category is None and selection is None:
-        stmt = (
-            select(
-                func.count(FoiRequest.id.distinct()).label("Anzahl"),
-                cast(func.count(resolved_mess.c.foi_request_id), Float).label("Anzahl_Erfolgreich"),
-                cast(func.count(late.c.id), Float).label("Fristueberschreitungen"),
-            )
-            .select_from(FoiRequest)
-            .join(late, late.c.id == FoiRequest.id, isouter=True)
-            .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)
-            .subquery()
+    stmt = (
+        select(
+            func.count(late.c.id).label("Fristueberschreitungen"),
         )
-
-    elif category == "public_body_id":
-        stmt = (
-            select(
-                func.count(FoiRequest.id.distinct()).label("Anzahl"),
-                cast(func.count(resolved_mess.c.foi_request_id), Float).label("Anzahl_Erfolgreich"),
-                cast(func.count(late.c.id), Float).label("Fristueberschreitungen"),
-            )
-            .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)
-            .join(late, late.c.id == FoiRequest.id, isouter=True)
-            .where(FoiRequest.public_body_id == selection)
-        )
-
-    elif category == "jurisdiction_id":
-        stmt = (
-            select(
-                func.count(FoiRequest.id.distinct()).label("Anzahl"),
-                cast(func.count(resolved_mess.c.foi_request_id), Float).label("Anzahl_Erfolgreich"),
-                cast(func.count(late.c.id), Float).label("Fristueberschreitungen"),
-            )
-            .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)
-            .join(late, late.c.id == FoiRequest.id, isouter=True)
-            .where(FoiRequest.jurisdiction_id == selection)
-        )
-
-    else:
-        stmt = (
-            select(
-                func.count(FoiRequest.id.distinct()).label("Anzahl"),
-                cast(func.count(resolved_mess.c.foi_request_id), Float).label("Anzahl_Erfolgreich"),
-                cast(func.count(late.c.id), Float).label("Fristueberschreitungen"),
-            )
-            .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)
-            .join(late, late.c.id == FoiRequest.id, isouter=True)
-            .where(FoiRequest.campaign_id == selection)
-        )
-
-    final = select(
-        stmt.c.Anzahl.label("Anzahl"),
-        case(
-            (
-                cast(stmt.c.Anzahl_Erfolgreich, Float) > 0,
-                (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
-            ),
-            else_=cast(0, Float).label("Erfolgsquote"),
-        ),
-        stmt.c.Fristueberschreitungen,
-        case(
-            (
-                cast(stmt.c.Fristueberschreitungen, Float) > 0,
-                (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
-            ),
-            else_=cast(0, Float).label("Verspätungsquote"),
-        ),
+        .select_from(FoiRequest)
+        .join(late, late.c.id == FoiRequest.id, isouter=True)
+        .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)
     )
 
-    result = db.execute(final).fetchall()
-    dct = {}
+    if category is not None and selection is not None:
+        stmt = stmt.where(getattr(FoiRequest, category) == selection)
 
-    dct["number"] = float(result[0][0])
-    dct["success_rate"] = float(result[0][1])
-    dct["number overdue"] = float(result[0][2])
-    dct["overdue_rate"] = float(result[0][3])
-    return dct
+    result = db.execute(stmt).fetchone()
+
+    return float(result[0])
+
+
+def proc_overdue_rate(overdue, foi_requests):
+    return overdue / foi_requests * 100 if foi_requests > 0 else 0.0
 
 
 def initial_reaction_time(db, category, selection):
@@ -477,8 +352,6 @@ def resolved_time(db, category, selection):
             .subquery()
         )
 
-        print(starter)
-
     elif category == "public_body_id":
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
@@ -553,37 +426,20 @@ def resolved_time(db, category, selection):
 
 def query_stats(db, category, selection, ascending=None):
     foi_requests = request_count(db, FoiRequest, category=category, selection=selection)
-
-    dist_resolution = group_by_count(db, FoiRequest, FoiRequest.resolution, category=category, selection=selection)
-    # removing foi requests that have no resolution. this number is actually higher than substracting
-    # foi_requests - resolved
-    # However,
-    # we are using the latter number as the number of unresolved foi requests
-    dist_resolution = [d for d in dist_resolution if d["name"] != ""]
-
-    # Summing up withdrawal and withdrawal due to costs because we have a separate statistic for that
-    withdrawn_sum = sum(
-        entry["value"] for entry in dist_resolution if entry["name"] in ["Zurückgezogen", "Wegen Kosten zurückgezogen"]
-    )
-    for entry in dist_resolution:
-        if entry["name"] == "Zurückgezogen":
-            entry["value"] = withdrawn_sum
-    dist_resolution = [d for d in dist_resolution if d["name"] != "Wegen Kosten zurückgezogen"]
-
-    # we are separating foi requests that are asleep  because it dominates the donut chart.
     dist_status = group_by_count(db, FoiRequest, FoiRequest.status, category=category, selection=selection)
-    asleep = [d for d in dist_status if d["name"] == "Eingeschlafen"][0]["value"]
-    resolved = [d for d in dist_status if d["name"] == "Abgeschlossen"][0]["value"]
-    dist_status = [d for d in dist_status if d["name"] != "Abgeschlossen"]
-
+    resolved = proc_resolved(dist_status)
+    overdue = overdue_requests(db, category=category, selection=selection)
     return {
         "foi_requests": foi_requests,
         "foi_requests_resolved": resolved,
         "foi_requests_not_resolved": foi_requests - resolved,
         "users": user_count(db, FoiRequest, category=category, selection=selection),
-        "dist_resolution": dist_resolution,
-        "dist_status": dist_status,
-        "status_asleep": asleep,
+        "dist_resolution": proc_dist_resolution(
+            group_by_count(db, FoiRequest, FoiRequest.resolution, category=category, selection=selection)
+        ),
+        "dist_status": proc_dist_status(dist_status),
+        "overdue_total": overdue,
+        "overdue_rate": proc_overdue_rate(overdue, foi_requests),
         "requests_by_month": requests_by_month(
             db, FoiRequest, FoiRequest.created_at, category=category, selection=selection
         ),
@@ -591,8 +447,6 @@ def query_stats(db, category, selection, ascending=None):
         "resolved_time": resolved_time(db, category=category, selection=selection),
         "percentage_costs": percentage_costs(db, category=category, selection=selection),
         "percentage_withdrawn": withdrew_costs(db, category, selection),
-        "min_costs": min_costs(db, category, selection),
         "max_costs": max_costs(db, category, selection),
         "avg_costs": avg_costs(db, category, selection),
-        "success_rate": overall_rates(db, category=category, selection=selection),
     }

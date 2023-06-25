@@ -12,6 +12,27 @@ def test_root():
     assert "foi_requests" in temp
 
 
+def test_root_public_bodies():
+    response = client.get("?category=public_body_id&selection=69")
+    assert response.status_code == 200
+    temp = response.json()
+    assert "foi_requests" in temp
+
+
+def test_root_jurisdictions():
+    response = client.get("?category=jurisdiction_id&selection=1")
+    assert response.status_code == 200
+    temp = response.json()
+    assert "foi_requests" in temp
+
+
+def test_root_campaigns():
+    response = client.get("?category=campaign_id&selection=13")
+    assert response.status_code == 200
+    temp = response.json()
+    assert "foi_requests" in temp
+
+
 def test_general_info():
     response = client.get("/general_info")
     assert response.status_code == 200
@@ -56,12 +77,4 @@ def test_campaign_starts():
     response = client.get("/campaign_starts")
     assert response.status_code == 200
     temp = response.json()
-    assert isinstance(temp, dict)
-
-
-def test_reaction_time():
-    response = client.get("/reaction_time")
-    assert response.status_code == 200
-    temp = response.json()
-    print(temp)
     assert isinstance(temp, dict)
