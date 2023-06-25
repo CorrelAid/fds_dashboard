@@ -33,7 +33,7 @@
                 source: data,
             },
             title: {
-                text: `${centerNumber} Anfragen abgeschlossen`,
+                text: `Insg. ${centerNumber}`,
                 show: true,
                 right: "center",
                 top: "center",
