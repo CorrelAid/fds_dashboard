@@ -122,7 +122,7 @@ def ranking_public_body(db, s: str, ascending: bool):
                 (cast(resolved.c.count, Float) / total_num.c.count * 100).label("Abgeschlossenenquote"),
                 late.c.count.label("Fristüberschreitungen"),
                 (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
-                successful.c.count.label("Erfolgreich"),
+                cast(successful.c.count, Float).label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
             )
             .join(resolved, PublicBody.id == resolved.c.public_body_id)
@@ -156,6 +156,7 @@ def ranking_public_body(db, s: str, ascending: bool):
         )
     print(stmt)
     result = db.execute(stmt).fetchall()
+    print(stmt)
     return to_dct(result)
 
 
