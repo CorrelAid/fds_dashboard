@@ -2,6 +2,8 @@
     import Card from "./Card.svelte";
     import { stats } from "../stores/stats.js";
     import { formatAsPercent, formatCosts } from "./helpers/formatting";
+
+    $: max_costs_url = `https://fragdenstaat.de/api/v1/request/${$stats.max_costs[0].id}/`
 </script>
 
 <Card title={"Wie teuer sind Anfragen?"}>
@@ -24,8 +26,8 @@
         </li>
         <li class="mb-3">
             <span class="h5"
-                >{formatCosts($stats.max_costs)}</span
-            > betrug die <a href="#">teuerste Rechnung</a>.
+                >{formatCosts($stats.max_costs[0].cost)}</span
+            > betrug die <a href={max_costs_url}>teuerste Rechnung</a>.
         </li>
     </ul>
 
