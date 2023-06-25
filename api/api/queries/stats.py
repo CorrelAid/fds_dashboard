@@ -1,7 +1,6 @@
-from sqlalchemy import funcy
+from sqlalchemy import func, case
 from api.models import FoiRequest, Message, PublicBody
 from sqlalchemy import select, cast, Float
-
 
 
 def resolved_(db, table, level, selection):
@@ -182,40 +181,49 @@ def withdrew_costs(db, level, selection):
 
 def min_costs(db, level, selection):
     if level is None and selection is None:
-        stmt = select(cast(func.min(FoiRequest.costs), Float)).where(FoiRequest.costs != 0)
+        min = select(cast(func.min(FoiRequest.costs), Float)).where(FoiRequest.costs != 0)
 
+        stmt = select(FoiRequest.id, cast(FoiRequest.costs, Float)).filter(FoiRequest.costs.in_(min))
     else:
-        stmt = (
+        min = (
             select(cast(func.min(FoiRequest.costs), Float))
             .where(FoiRequest.costs != 0)
             .where(getattr(FoiRequest, level) == selection)
         )
+        stmt = (
+            select(FoiRequest.id, cast(FoiRequest.costs, Float))
+            .filter(FoiRequest.costs.in_(min))
+            .where(FoiRequest.costs != 0)
+            .where(getattr(FoiRequest, level) == selection)
+        )
     result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
-    if result is None:
-        result = 0
-    else:
-        result = result[0][0]
+    result = [{"cost": row[1], "id": row[0]} for row in result]
+    if result[0]["id"] is None:
+        result = [{"cost": 0, "id": None} for row in result]
     return result
 
 
 def max_costs(db, level, selection):
     if level is None and selection is None:
-        stmt = select(func.max(FoiRequest.costs)).where(FoiRequest.costs != 0)
+        max = select(cast(func.max(FoiRequest.costs), Float)).where(FoiRequest.costs != 0)
 
+        stmt = select(FoiRequest.id, cast(FoiRequest.costs, Float)).filter(FoiRequest.costs.in_(max))
     else:
-        stmt = (
-            select(func.max(FoiRequest.costs))
+        max = (
+            select(cast(func.max(FoiRequest.costs), Float))
             .where(FoiRequest.costs != 0)
             .where(getattr(FoiRequest, level) == selection)
         )
-
+        stmt = (
+            select(FoiRequest.id, cast(FoiRequest.costs, Float))
+            .filter(FoiRequest.costs.in_(max))
+            .where(FoiRequest.costs != 0)
+            .where(getattr(FoiRequest, level) == selection)
+        )
     result = db.execute(stmt).fetchall()
-    result = [tuple(row) for row in result]
-    if result is None:
-        result = 0
-    else:
-        result = result[0][0]
+    result = [{"cost": row[1], "id": row[0]} for row in result]
+    if result[0]["id"] is None:
+        result = [{"cost": 0, "id": None} for row in result]
     return result
 
 
@@ -232,7 +240,7 @@ def avg_costs(db, level, selection):
 
     result = db.execute(stmt).fetchall()
     result = [tuple(row) for row in result]
-    if result is None:
+    if result[0][0] is None:
         result = 0
     else:
         result = result[0][0]
@@ -293,21 +301,6 @@ def overall_rates(db, level, selection):
             .subquery()
         )
 
-        final = select(
-            stmt.c.Anzahl.label("Anzahl"),
-            case(
-                cast(stmt.c.Anzahl_Erfolgreich, Float) > 0,
-                (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
-                else_=cast(0, Float).label("Erfolgsquote"),
-            ),
-            cast(stmt.c.Fristueberschreitungen, Float),
-            case(
-                cast(stmt.c.Fristueberschreitungen, Float) > 0,
-                (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
-                else_=cast(0, Float).label("Verspätungsquote"),
-            ),
-        )
-
     elif level == "public_body_id":
         stmt = (
             select(
@@ -318,13 +311,6 @@ def overall_rates(db, level, selection):
             .join(resolved_mess, FoiRequest.id == resolved_mess.c.foi_request_id, isouter=True)
             .join(late, late.c.id == FoiRequest.id, isouter=True)
             .where(FoiRequest.public_body_id == selection)
-        )
-
-        final = select(
-            stmt.c.Anzahl.label("Anzahl"),
-            (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
-            stmt.c.Fristueberschreitungen,
-            (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
         )
 
     elif level == "jurisdiction_id":
@@ -339,12 +325,6 @@ def overall_rates(db, level, selection):
             .where(FoiRequest.jurisdiction_id == selection)
         )
 
-        final = select(
-            stmt.c.Anzahl.label("Anzahl"),
-            (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
-            stmt.c.Fristueberschreitungen,
-            (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
-        )
     else:
         stmt = (
             select(
@@ -357,12 +337,24 @@ def overall_rates(db, level, selection):
             .where(FoiRequest.campaign_id == selection)
         )
 
-        final = select(
-            stmt.c.Anzahl.label("Anzahl"),
-            (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
-            stmt.c.Fristueberschreitungen,
-            (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
-        )
+    final = select(
+        stmt.c.Anzahl.label("Anzahl"),
+        case(
+            (
+                cast(stmt.c.Anzahl_Erfolgreich, Float) > 0,
+                (cast(stmt.c.Anzahl_Erfolgreich, Float) / stmt.c.Anzahl * 100).label("Erfolgsquote"),
+            ),
+            else_=cast(0, Float).label("Erfolgsquote"),
+        ),
+        stmt.c.Fristueberschreitungen,
+        case(
+            (
+                cast(stmt.c.Fristueberschreitungen, Float) > 0,
+                (cast(stmt.c.Fristueberschreitungen, Float) / stmt.c.Anzahl * 100).label("Verspätungsquote"),
+            ),
+            else_=cast(0, Float).label("Verspätungsquote"),
+        ),
+    )
 
     result = db.execute(final).fetchall()
     dct = {}
@@ -392,7 +384,7 @@ def initial_reaction_time(db, level, selection):
             .subquery()
         )
 
-    elif level == "PublicBody":
+    elif level == "public_body_id":
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .where(Message.sender_public_body_id.is_(None))
@@ -409,7 +401,7 @@ def initial_reaction_time(db, level, selection):
             .subquery()
         )
 
-    elif level == "Jurisdiction":
+    elif level == "jurisdiction_id":
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(PublicBody, Message.recipient_public_body_id == PublicBody.id)
@@ -428,7 +420,7 @@ def initial_reaction_time(db, level, selection):
             .subquery()
         )
 
-    elif level == "Campaign":
+    elif level == "campaign_id":
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
@@ -459,10 +451,11 @@ def initial_reaction_time(db, level, selection):
 
     result = db.execute(average).fetchall()
     result = [tuple(row) for row in result]
-    print("start")
-    print(result)
-    print(result[0][0])
-    return result[0][0]
+    if result[0][0] is None:
+        result = 0
+    else:
+        result = result[0][0]
+    return result
 
 
 def resolved_time(db, level, selection):
@@ -484,7 +477,7 @@ def resolved_time(db, level, selection):
 
         print(starter)
 
-    elif level == "PublicBody":
+    elif level == "public_body_id":
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .where(Message.sender_public_body_id.is_(None))
@@ -501,7 +494,7 @@ def resolved_time(db, level, selection):
             .subquery()
         )
 
-    elif level == "Jurisdiction":
+    elif level == "jurisdiction_id":
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(PublicBody, Message.recipient_public_body_id == PublicBody.id)
@@ -520,7 +513,7 @@ def resolved_time(db, level, selection):
             .subquery()
         )
 
-    elif level == "Campaign":
+    elif level == "campaign_id":
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
@@ -549,9 +542,11 @@ def resolved_time(db, level, selection):
 
     result = db.execute(average).fetchall()
     result = [tuple(row) for row in result]
-    print(result)
-    print(result[0][0])
-    return result[0][0]
+    if result[0][0] is None:
+        result = 0
+    else:
+        result = result[0][0]
+    return result
 
 
 def query_stats(db, level, selection, ascending=None):

@@ -15,8 +15,8 @@ class Stats(BaseModel):
     resolved_time: timedelta
     percentage_costs: float
     percentage_withdrawn: float
-    min_costs: float
-    max_costs: float
+    min_costs: List[dict]
+    max_costs: List[dict]
     avg_costs: float
     success_rate: dict
 
