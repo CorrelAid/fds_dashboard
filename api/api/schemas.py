@@ -10,6 +10,11 @@ class Stats(BaseModel):
     users: int
     dist_resolution: List[dict]
     dist_status: List[dict]
+    asleep_number: int
+    asleep_percentage_total: float
+    asleep_percentage_not_resolved: float
+    overdue_not_resolved: int
+    overdue_percentage_not_resolved: float
     percentage_costs: float
     percentage_withdrawn: float
     max_costs: dict

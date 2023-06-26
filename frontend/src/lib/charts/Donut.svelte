@@ -91,7 +91,6 @@
         };
     };
 
-    $:console.log(data)
 </script>
 {#if data}
 <Chart options={gen_options(data)} {height} />

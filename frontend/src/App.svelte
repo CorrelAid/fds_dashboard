@@ -41,16 +41,16 @@
         <B1 />
       </div>
       <div class="col-lg-5 p-3">
-        <C2 />
+        <C1 />
       </div>
     </div>
     <!-- C -->
     <div class="row">
-      <div class="p-3">
+      <div class="col-lg-7 p-3">
         <B2 />
       </div>
-      <div class="col-lg-6 p-3">
-        <C1 />
+      <div class="col-lg-5 p-3">
+        <C2 />
       </div>
     </div>
     <div class="row">

@@ -62,9 +62,8 @@
   }
 
   function getid(name){
-    console.log(name,type)
     const temp = $general_info[type].find((obj) => obj.name === name).id
-    console.log(temp)
+
     return temp
   }
   function handleLinkClick(name){

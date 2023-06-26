@@ -25,7 +25,7 @@ export const stats = derived(url_params, ($url_params, set) => {
     ).then(function (data) {
             
             const stats = data
-            console.log(temp_endpoint)
+         
            
             set(stats)
         })

@@ -56,10 +56,6 @@
         explore_url = "https://fragdenstaat.de/anfragen/"
     }
 
-    // $: if($general_info.jurisdictions){
-    //     console.log($general_info.jurisdictions)
-    //     console.log($general_info.jurisdictions.find((obj) => obj.id === 91).name);}
-    $: console.log(category);
 </script>
 
 <Card title={"Wie viele Anfragen wurden gestellt?"}>

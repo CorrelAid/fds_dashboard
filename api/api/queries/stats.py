@@ -38,6 +38,10 @@ def fractional_days(delta):
     return round(delta.total_seconds() / (24 * 60 * 60), 2)
 
 
+def gen_perc(value, total):
+    return value / total * 100 if total > 0 else 0.0
+
+
 def translate(x):
     translations = {
         # Resolution
@@ -78,15 +82,28 @@ def proc_dist_resolution(dist_resolution):
 
 def proc_dist_status(dist_status):
     # removing status == resolved
-    dist_status = [{"name": translate(d["name"]), "value": d["value"]} for d in dist_status if d["name"] != "resolved"]
+    dist_status = [
+        {"name": translate(d["name"]), "value": d["value"]}
+        for d in dist_status
+        if d["name"] != "resolved" and d["name"] != "asleep"
+    ]
+
     return dist_status
 
 
-def proc_resolved(dist_status):
+def proc_value_status(dist_status, key):
     try:
-        return [d for d in dist_status if d["name"] == "resolved"][0]["value"]
+        return [d for d in dist_status if d["name"] == key][0]["value"]
     except IndexError:
         return 0
+
+
+def proc_asleep_percentage(asleep, foi_requests):
+    return gen_perc(asleep, foi_requests)
+
+
+def proc_overdue_rate(overdue, foi_requests):
+    return gen_perc(overdue, foi_requests)
 
 
 def requests_by_month(db, table, column, category=None, selection=None):
@@ -243,10 +260,6 @@ def overdue_requests(db, category, selection):
     result = db.execute(stmt).fetchone()
 
     return float(result[0])
-
-
-def proc_overdue_rate(overdue, foi_requests):
-    return overdue / foi_requests * 100 if foi_requests > 0 else 0.0
 
 
 def initial_reaction_time(db, category, selection):
@@ -434,19 +447,27 @@ def resolved_time(db, category, selection):
 def query_stats(db, category, selection, ascending=None):
     foi_requests = request_count(db, FoiRequest, category=category, selection=selection)
     dist_status = group_by_count(db, FoiRequest, FoiRequest.status, category=category, selection=selection)
-    resolved = proc_resolved(dist_status)
-    overdue = overdue_requests(db, category=category, selection=selection)
+    resolved = proc_value_status(dist_status, "resolved")
+    not_resolved = foi_requests - resolved
+    overdue_total = overdue_requests(db, category=category, selection=selection)
+    asleep = proc_value_status(dist_status, "asleep")
+    overdue_not_resolved = proc_value_status(dist_status, "overdue")
     return {
         "foi_requests": foi_requests,
         "foi_requests_resolved": resolved,
-        "foi_requests_not_resolved": foi_requests - resolved,
+        "foi_requests_not_resolved": not_resolved,
         "users": user_count(db, FoiRequest, category=category, selection=selection),
+        "asleep_number": asleep,
+        "asleep_percentage_total": proc_asleep_percentage(asleep, foi_requests),
+        "asleep_percentage_not_resolved": proc_asleep_percentage(asleep, not_resolved),
+        "overdue_not_resolved": overdue_not_resolved,
+        "overdue_percentage_not_resolved": gen_perc(overdue_not_resolved, not_resolved),
         "dist_resolution": proc_dist_resolution(
             group_by_count(db, FoiRequest, FoiRequest.resolution, category=category, selection=selection)
         ),
         "dist_status": proc_dist_status(dist_status),
-        "overdue_total": overdue,
-        "overdue_rate": proc_overdue_rate(overdue, foi_requests),
+        "overdue_total": overdue_total,
+        "overdue_rate": proc_overdue_rate(overdue_total, foi_requests),
         "requests_by_month": requests_by_month(
             db, FoiRequest, FoiRequest.created_at, category=category, selection=selection
         ),
