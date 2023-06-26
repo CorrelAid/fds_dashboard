@@ -34,6 +34,10 @@ def group_by_count(db, table, column, category=None, selection=None):
     return result
 
 
+def fractional_days(delta):
+    return round(delta.total_seconds() / (24 * 60 * 60), 2)
+
+
 def translate(x):
     translations = {
         # Resolution
@@ -333,7 +337,7 @@ def initial_reaction_time(db, category, selection):
     if result[0][0] is None:
         result = 0
     else:
-        result = result[0][0]
+        result = fractional_days(result[0][0])
     return result
 
 
@@ -422,7 +426,8 @@ def resolved_time(db, category, selection):
     if result[0][0] is None:
         result = 0
     else:
-        result = result[0][0]
+        result = fractional_days(result[0][0])
+
     return result
 
 
