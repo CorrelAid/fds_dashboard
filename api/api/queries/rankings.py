@@ -1,6 +1,7 @@
 from sqlalchemy import func
 from api.models import FoiRequest, PublicBody, Jurisdiction, Campaign, Message
 from sqlalchemy import select, asc, desc, cast, Float, case, or_, nullslast
+from api.queries.stats import resolved_time_prep, fractional_days
 
 
 def to_dct(result):
@@ -20,6 +21,14 @@ def to_dct(result):
         if success_rate is None:
             success_rate = 0
         dct["success_rate"] = float(success_rate)
+        avg_cost = row[7]
+        if avg_cost is None:
+            avg_cost = 0
+        dct["avg_cost"] = float(avg_cost)
+        time = row[8]
+        if time is None:
+            time = 0
+        dct["avg_time"] = fractional_days(time)
         lst.append(dct)
 
     return lst
@@ -108,13 +117,44 @@ def ranking(db):
     return late2, total_num, resolved, successful
 
 
+def avg_costs(db, category):
+    avg_costs = (
+        select(getattr(FoiRequest, category), func.avg(FoiRequest.costs).label("average"))
+        .where(FoiRequest.costs > 0)
+        .group_by(getattr(FoiRequest, category))
+    ).subquery()
+    return avg_costs
+
+
+def resolved_time(db, category):
+    combine = resolved_time_prep(db, None, None)
+
+    stmt = (
+        select(getattr(FoiRequest, category), func.avg(combine.c.time).label("average"))
+        .join(combine, FoiRequest.id == combine.c.id)
+        .group_by(getattr(FoiRequest, category))
+    ).subquery()
+    return stmt
+
+
 def ranking_public_body(db, selection: str, ascending: bool):
     if ascending:
         ordering = asc
     else:
         ordering = desc
     late, total_num, resolved, successful = ranking(db)
-    if selection in ["Anzahl", "Erfolgsquote", "Verspätungsquote", "Abgeschlossenenquote", "Erfolgreich"]:
+    avg_cost = avg_costs(db, "public_body_id")
+    time = resolved_time(db, "public_body_id")
+
+    if selection in [
+        "Anzahl",
+        "Erfolgsquote",
+        "Verspätungsquote",
+        "Abgeschlossenenquote",
+        "Erfolgreich",
+        "Kosten",
+        "Dauer",
+    ]:
         stmt = (
             select(
                 PublicBody.name,
@@ -124,11 +164,15 @@ def ranking_public_body(db, selection: str, ascending: bool):
                 (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
                 cast(successful.c.count, Float).label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
+                avg_cost.c.average.label("Kosten"),
+                time.c.average.label("Dauer"),
             )
             .join(resolved, PublicBody.id == resolved.c.public_body_id)
             .join(total_num, PublicBody.id == total_num.c.public_body_id)
             .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
-            .join(late, late.c.public_body_id == PublicBody.id, isouter=True)
+            .join(late, PublicBody.id == late.c.public_body_id, isouter=True)
+            .join(avg_cost, avg_cost.c.public_body_id == PublicBody.id, isouter=True)
+            .join(time, time.c.public_body_id == PublicBody.id, isouter=True)
             .where(total_num.c.public_body_id == resolved.c.public_body_id)
             .where(total_num.c.count > 20)
             .order_by(nullslast(ordering(selection)))
@@ -144,11 +188,15 @@ def ranking_public_body(db, selection: str, ascending: bool):
                 (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
                 successful.c.count.label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
+                avg_cost.c.average.label("Kosten"),
+                time.c.average.label("Dauer"),
             )
             .join(resolved, PublicBody.id == resolved.c.public_body_id)
             .join(total_num, PublicBody.id == total_num.c.public_body_id)
             .join(late, late.c.public_body_id == PublicBody.id, isouter=True)
             .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
+            .join(avg_cost, avg_cost.c.public_body_id == PublicBody.id, isouter=True)
+            .join(time, time.c.public_body_id == PublicBody.id, isouter=True)
             .where(total_num.c.public_body_id == resolved.c.public_body_id)
             .where(total_num.c.count > 20)
             .order_by(nullslast("Verspätungsquote"))
@@ -167,7 +215,18 @@ def ranking_jurisdictions(db, selection: str, ascending: bool):
         ordering = desc
 
     late, total_num, resolved, successful = ranking(db)
-    if selection in ["Anzahl", "Erfolgsquote", "Verspätungsquote", "Abgeschlossenenquote", "Erfolgreich"]:
+    avg_cost = avg_costs(db, "jurisdiction_id")
+    time = resolved_time(db, "jurisdiction_id")
+
+    if selection in [
+        "Anzahl",
+        "Erfolgsquote",
+        "Verspätungsquote",
+        "Abgeschlossenenquote",
+        "Erfolgreich",
+        "Kosten",
+        "Dauer",
+    ]:
         stmt = (
             select(
                 Jurisdiction.name,
@@ -179,12 +238,16 @@ def ranking_jurisdictions(db, selection: str, ascending: bool):
                 (cast(func.sum(late.c.count), Float) / func.sum(total_num.c.count) * 100).label("Verspätungsquote"),
                 func.sum(successful.c.count).label("Erfolgreich"),
                 (cast(func.sum(successful.c.count), Float) / func.sum(total_num.c.count) * 100).label("Erfolgsquote"),
+                cast(func.min(avg_cost.c.average), Float).label("Kosten"),
+                func.min(time.c.average).label("Dauer"),
             )
             .join(PublicBody, Jurisdiction.id == PublicBody.jurisdiction_id)
             .join(resolved, PublicBody.id == resolved.c.public_body_id)
             .join(total_num, PublicBody.id == total_num.c.public_body_id)
             .join(late, late.c.public_body_id == PublicBody.id, isouter=True)
             .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
+            .join(avg_cost, avg_cost.c.jurisdiction_id == PublicBody.jurisdiction_id, isouter=True)
+            .join(time, time.c.jurisdiction_id == PublicBody.jurisdiction_id, isouter=True)
             .where(total_num.c.public_body_id == resolved.c.public_body_id)
             .group_by(Jurisdiction.name)
             .order_by(nullslast(ordering(selection)))
@@ -202,14 +265,18 @@ def ranking_jurisdictions(db, selection: str, ascending: bool):
                 (cast(func.sum(late.c.count), Float) / func.sum(total_num.c.count) * 100).label("Verspätungsquote"),
                 func.sum(successful.c.count).label("Erfolgreich"),
                 (cast(func.sum(successful.c.count), Float) / func.sum(total_num.c.count) * 100).label("Erfolgsquote"),
+                cast(func.min(avg_cost.c.average), Float).label("Kosten"),
+                func.min(time.c.average).label("Dauer"),
             )
             .join(PublicBody, Jurisdiction.id == PublicBody.jurisdiction)
             .join(resolved, PublicBody.id == resolved.c.public_body_id)
             .join(total_num, PublicBody.id == total_num.c.public_body_id)
             .join(late, late.c.public_body_id == PublicBody.id, isouter=True)
             .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
+            .join(avg_cost, avg_cost.c.jurisdiction_id == Jurisdiction.id, isouter=True)
+            .join(time, time.c.jurisdiction_id == PublicBody.jurisdiction_id, isouter=True)
             .where(total_num.c.public_body_id == resolved.c.public_body_id)
-            .group_by(Jurisdiction.name)
+            .group_by(Jurisdiction.name, Jurisdiction.id)
             .order_by(nullslast("Verspätungsquote"))
             .limit(10)
         )
@@ -284,13 +351,23 @@ def ranking_campaign(db, selection: str, ascending: bool):
     )
 
     late = select(late.c.campaign_id, case((late.c.count.isnot(None), late.c.count), else_=0).label("count")).subquery()
+    avg_cost = avg_costs(db, "campaign_id")
+    time = resolved_time(db, "campaign_id")
 
     if ascending:
         ordering = asc
     else:
         ordering = desc
 
-    if selection in ["Anzahl", "Erfolgsquote", "Verspätungsquote", "Abgeschlossenenquote", "Erfolgreich"]:
+    if selection in [
+        "Anzahl",
+        "Erfolgsquote",
+        "Verspätungsquote",
+        "Abgeschlossenenquote",
+        "Erfolgreich",
+        "Kosten",
+        "Dauer",
+    ]:
         stmt = (
             select(
                 Campaign.name,
@@ -300,11 +377,15 @@ def ranking_campaign(db, selection: str, ascending: bool):
                 (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
                 func.sum(successful.c.count).label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
+                cast(func.min(avg_cost.c.average), Float).label("Kosten"),
+                func.min(time.c.average).label("Dauer"),
             )
             .join(resolved, Campaign.id == resolved.c.campaign_id)
             .join(total_num, Campaign.id == total_num.c.campaign_id)
             .join(late, late.c.campaign_id == Campaign.id, isouter=True)
             .join(successful, successful.c.campaign_id == Campaign.id, isouter=True)
+            .join(avg_cost, avg_cost.c.campaign_id == Campaign.id, isouter=True)
+            .join(time, time.c.campaign_id == Campaign.id, isouter=True)
             .where(total_num.c.campaign_id == resolved.c.campaign_id)
             .where(total_num.c.count > 20)
             .group_by(
@@ -327,11 +408,15 @@ def ranking_campaign(db, selection: str, ascending: bool):
                 (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
                 func.sum(successful.c.count).label("Erfolgreich"),
                 (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
+                cast(func.min(avg_cost.c.average), Float).label("Kosten"),
+                func.min(time.c.average).label("Dauer"),
             )
             .join(resolved, Campaign.id == resolved.c.campaign_id)
             .join(total_num, Campaign.id == total_num.c.campaign_id)
             .join(late, late.c.campaign_id == Campaign.id, isouter=True)
             .join(successful, successful.c.campaign_id == Campaign.id, isouter=True)
+            .join(avg_cost, avg_cost.c.campaign_id == Campaign.id, isouter=True)
+            .join(time, time.c.campaign_id == Campaign.id, isouter=True)
             .where(total_num.c.campaign_id == resolved.c.campaign_id)
             .where(total_num.c.count > 20)
             .order_by(nullslast("Verspätungsquote"))

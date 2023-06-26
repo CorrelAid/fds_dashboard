@@ -141,8 +141,11 @@ def percentage_costs(db, category, selection):
 
     if category is not None and selection is not None:
         not_free = not_free.where(getattr(FoiRequest, category) == selection)
-
-    total_count = db.scalar(select(func.count(FoiRequest.id.distinct())))
+        total_count = db.scalar(
+            select(func.count(FoiRequest.id.distinct())).where(getattr(FoiRequest, category) == selection)
+        )
+    else:
+        total_count = db.scalar(select(func.count(FoiRequest.id.distinct())))
     not_free_count = db.scalar(select(func.count(not_free.subquery().c.id.distinct())))
 
     if total_count == 0:
@@ -176,13 +179,16 @@ def withdrew_costs(db, category, selection):
     return result
 
 
-def max_costs(db, category, selection):
+def max_costs(db, category, selection, min: bool):
     stmt = select(FoiRequest.id, cast(FoiRequest.costs, Float)).where(FoiRequest.costs != 0)
 
     if category is not None and selection is not None:
         stmt = stmt.where(getattr(FoiRequest, category) == selection)
 
-    stmt = stmt.order_by(desc(FoiRequest.costs)).limit(1)
+    if not min:
+        stmt = stmt.order_by(desc(FoiRequest.costs)).limit(1)
+    else:
+        stmt = stmt.order_by(FoiRequest.costs).limit(1)
     result = db.execute(stmt).fetchone()
     if result is None:
         result = {"cost": 0, "id": None}
@@ -274,6 +280,8 @@ def initial_reaction_time(db, category, selection):
 
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
+            .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
+            .where(Message.timestamp > FoiRequest.created_at)
             .where(Message.sender_public_body_id.isnot(None))
             .where(Message.recipient_public_body_id.is_(None))
             .group_by(Message.foi_request_id)
@@ -291,6 +299,8 @@ def initial_reaction_time(db, category, selection):
 
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
+            .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
+            .where(Message.timestamp > FoiRequest.created_at)
             .where(Message.sender_public_body_id == selection)
             .where(Message.recipient_public_body_id.is_(None))
             .group_by(Message.foi_request_id)
@@ -310,6 +320,8 @@ def initial_reaction_time(db, category, selection):
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(PublicBody, Message.sender_public_body_id == PublicBody.id)
+            .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
+            .where(Message.timestamp > FoiRequest.created_at)
             .where(PublicBody.jurisdiction_id == selection)
             .where(Message.recipient_public_body_id.is_(None))
             .group_by(Message.foi_request_id)
@@ -330,6 +342,8 @@ def initial_reaction_time(db, category, selection):
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
+            .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
+            .where(Message.timestamp > FoiRequest.created_at)
             .where(Message.sender_public_body_id.isnot(None))
             .where(Message.recipient_public_body_id.is_(None))
             .where(FoiRequest.campaign_id == selection)
@@ -342,19 +356,52 @@ def initial_reaction_time(db, category, selection):
         .select_from(reaction.join(starter, reaction.c.id == starter.c.id))
         .subquery()
     )
-
-    average = select(func.avg(combine.c.time))
-
-    result = db.execute(average).fetchall()
-    result = [tuple(row) for row in result]
-    if result[0][0] is None:
-        result = 0
-    else:
-        result = fractional_days(result[0][0])
+    avg = time_function(db, combine, "avg")
+    min = time_function(db, combine, "min")
+    max = time_function(db, combine, "max")
+    result = [{"Average": avg, "Min": {"value": min[1], "id": min[0]}, "Max": {"value": max[1], "id": max[0]}}]
     return result
 
 
-def resolved_time(db, category, selection):
+def time_function(db, input, function):
+    if function == "avg":
+        stmt = select(func.avg(getattr(input.c, "time")).label("Avg"))
+
+        result = db.execute(stmt).fetchone()
+        if result is None:
+            result = 0
+        else:
+            result = fractional_days(result[0])
+        return result
+
+    elif function == "max":
+        stmt = (
+            select(getattr(input.c, "id"), getattr(input.c, "time")).order_by(desc(getattr(input.c, "time"))).limit(1)
+        )
+    elif function == "min":
+        stmt = (
+            select(getattr(input.c, "id"), getattr(input.c, "time"))
+            .where(func.extract("epoch", getattr(input.c, "time")) > 300)
+            # at least 5 minutes between first message and answer to filter manually added messages with (almost)
+            # same timestamp
+            .order_by(getattr(input.c, "time"))
+            .limit(1)
+        )
+
+    result = db.execute(stmt).fetchone()
+    if result is None:
+        result1 = []
+        result1[0] = None
+        result1[1] = 0
+    else:
+        result1 = []
+        result1.append(result[0])
+        result1.append(fractional_days(result[1]))
+
+    return result1
+
+
+def resolved_time_prep(db, category, selection):
     if selection is None and category is None:
         starter = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
@@ -366,6 +413,8 @@ def resolved_time(db, category, selection):
 
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
+            .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
+            .where(Message.timestamp > FoiRequest.created_at)
             .filter(Message.status.in_(["resolved", "partially_successful", "successful"]))
             .group_by(Message.foi_request_id)
             .subquery()
@@ -382,6 +431,8 @@ def resolved_time(db, category, selection):
 
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
+            .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
+            .where(Message.timestamp > FoiRequest.created_at)
             .filter(Message.status.in_(["resolved", "partially_successful", "successful"]))
             .where(Message.sender_public_body_id == selection)
             .group_by(Message.foi_request_id)
@@ -401,6 +452,8 @@ def resolved_time(db, category, selection):
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(PublicBody, Message.sender_public_body_id == PublicBody.id)
+            .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
+            .where(Message.timestamp > FoiRequest.created_at)
             .filter(Message.status.in_(["resolved", "partially_successful", "successful"]))
             .where(PublicBody.jurisdiction_id == selection)
             .group_by(Message.foi_request_id)
@@ -420,6 +473,8 @@ def resolved_time(db, category, selection):
         reaction = (
             select(Message.foi_request_id.label("id"), func.min(Message.timestamp))
             .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
+            .join(FoiRequest, Message.foi_request_id == FoiRequest.id)
+            .where(Message.timestamp > FoiRequest.created_at)
             .filter(Message.status.in_(["resolved", "partially_successful", "successful"]))
             .where(FoiRequest.campaign_id == selection)
             .group_by(Message.foi_request_id)
@@ -431,16 +486,15 @@ def resolved_time(db, category, selection):
         .select_from(reaction.join(starter, reaction.c.id == starter.c.id))
         .subquery()
     )
+    return combine
 
-    average = select(func.avg(combine.c.time))
 
-    result = db.execute(average).fetchall()
-    result = [tuple(row) for row in result]
-    if result[0][0] is None:
-        result = 0
-    else:
-        result = fractional_days(result[0][0])
-
+def resolved_time(db, category, selection):
+    combine = resolved_time_prep(db, category, selection)
+    avg = time_function(db, combine, "avg")
+    min = time_function(db, combine, "min")
+    max = time_function(db, combine, "max")
+    result = [{"Average": avg, "Min": {"id": min[0], "value": min[1]}, "Max": {"id": max[0], "value": max[1]}}]
     return result
 
 
@@ -502,7 +556,8 @@ def query_stats(db, category, selection, ascending=None):
         "resolved_time": resolved_time(db, category=category, selection=selection),
         "percentage_costs": percentage_costs(db, category=category, selection=selection),
         "percentage_withdrawn": withdrew_costs(db, category, selection),
-        "max_costs": max_costs(db, category, selection),
+        "max_costs": max_costs(db, category, selection, False),
+        "min_costs": max_costs(db, category, selection, True),
         "avg_costs": avg_costs(db, category, selection),
         "refusal_reasons_specified": refusal_reason_request_count(
             db, category, selection, (FoiRequest.refusal_reason.isnot(None)) & (FoiRequest.refusal_reason != "")

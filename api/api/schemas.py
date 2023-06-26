@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from pydantic.schema import List
-from datetime import timedelta
+
+# from datetime import timedelta
 
 
 class Stats(BaseModel):
@@ -18,11 +19,12 @@ class Stats(BaseModel):
     percentage_costs: float
     percentage_withdrawn: float
     max_costs: dict
+    min_costs: dict
     avg_costs: float
     overdue_total: int
     overdue_rate: float
-    initial_reaction_time: timedelta
-    resolved_time: timedelta
+    initial_reaction_time: List[dict]
+    resolved_time: List[dict]
     refusal_reasons_specified: int
     no_law_applicable: int
     other_or_no_reason: int
