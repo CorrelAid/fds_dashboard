@@ -39,6 +39,7 @@ def fractional_days(delta):
 
 
 def gen_perc(value, total):
+    print(value)
     return value / total * 100 if total > 0 else 0.0
 
 
@@ -468,6 +469,7 @@ def refusal_reason_request_count(db, category, selection, conditions):
         stmt = stmt.where(getattr(FoiRequest, category) == selection)
 
     result = db.execute(stmt).scalar()
+    print(stmt)
     return result
 
 
@@ -479,6 +481,11 @@ def query_stats(db, category, selection, ascending=None):
     overdue_total = overdue_requests(db, category=category, selection=selection)
     asleep = proc_value_status(dist_status, "asleep")
     overdue_not_resolved = proc_value_status(dist_status, "overdue")
+    refused = refusal_reason_request_count(db, category, selection, (FoiRequest.resolution == "refused"))
+    other_or_no_reason = refusal_reason_request_count(
+        db, category, selection, (((FoiRequest.refusal_reason == "") & (FoiRequest.resolution == "refused")))
+    )
+    print(other_or_no_reason, refused)
     return {
         "foi_requests": foi_requests,
         "foi_requests_resolved": resolved,
@@ -504,10 +511,23 @@ def query_stats(db, category, selection, ascending=None):
         "percentage_withdrawn": withdrew_costs(db, category, selection),
         "max_costs": max_costs(db, category, selection),
         "avg_costs": avg_costs(db, category, selection),
-        "refusal_reasons_specified": refusal_reason_request_count(
-            db, category, selection, (FoiRequest.refusal_reason.isnot(None)) & (FoiRequest.refusal_reason != "")
+        "refusal_reasons_specified": gen_perc(
+            refusal_reason_request_count(
+                db,
+                category,
+                selection,
+                (FoiRequest.refusal_reason.isnot(None))
+                & (FoiRequest.refusal_reason != "")
+                & (FoiRequest.resolution == "refused"),
+            ),
+            refused,
         ),
-        "no_law_applicable": refusal_reason_request_count(db, category, selection, FoiRequest.refusal_reason.is_(None)),
-        "other_or_no_reason": refusal_reason_request_count(db, category, selection, FoiRequest.refusal_reason == ""),
+        "no_law_applicable": gen_perc(
+            refusal_reason_request_count(
+                db, category, selection, ((FoiRequest.refusal_reason.is_(None)) & (FoiRequest.resolution == "refused"))
+            ),
+            refused,
+        ),
+        "other_or_no_reason": gen_perc(other_or_no_reason, refused),
         "refusal_reasons": refusal_reasons(db, category, selection),
     }

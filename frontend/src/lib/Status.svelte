@@ -1,7 +1,7 @@
 <script>
     import { stats } from "../stores/stats.js";
     import Card from "./Card.svelte";
-    import { formatAsPercent } from "./helpers/formatting";
+    import { formatAsPercent } from "./helpers/formatting.js";
 </script>
 
 <Card title={`Was ist der Stand von nicht abgeschlossenen Anfragen?`}>

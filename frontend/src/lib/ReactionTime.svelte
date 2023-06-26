@@ -2,7 +2,7 @@
     import { stats } from "../stores/stats.js";
     import Balken from "./charts/Balken.svelte";
     import Card from "./Card.svelte";
-    import { roundNumber,formatAsPercent } from "./helpers/formatting";
+    import { roundNumber,formatAsPercent } from "./helpers/formatting.js";
 </script>
 <Card title={"Wie schnell ist der Staat?"}>
     <ul>

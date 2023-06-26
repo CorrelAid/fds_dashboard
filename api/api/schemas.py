@@ -23,9 +23,9 @@ class Stats(BaseModel):
     overdue_rate: float
     initial_reaction_time: timedelta
     resolved_time: timedelta
-    refusal_reasons_specified: int
-    no_law_applicable: int
-    other_or_no_reason: int
+    refusal_reasons_specified: float
+    no_law_applicable: float
+    other_or_no_reason: float
     refusal_reasons: List[dict]
     requests_by_month: List[dict]
 
