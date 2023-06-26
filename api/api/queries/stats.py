@@ -39,7 +39,6 @@ def fractional_days(delta):
 
 
 def gen_perc(value, total):
-    print(value)
     return value / total * 100 if total > 0 else 0.0
 
 
@@ -448,7 +447,11 @@ def resolved_time(db, category, selection):
 def refusal_reasons(db, category, selection):
     stmt = (
         select(FoiRequest.refusal_reason, func.count().label("num"))
-        .where((FoiRequest.refusal_reason.isnot(None)) & (FoiRequest.refusal_reason != ""))
+        .where(
+            (FoiRequest.refusal_reason.isnot(None))
+            & (FoiRequest.refusal_reason != "")
+            & (FoiRequest.refusal_reason != "Gesetz nicht anwendbar")
+        )
         .group_by(FoiRequest.refusal_reason)
         .order_by(func.count().desc())
     )
@@ -469,7 +472,6 @@ def refusal_reason_request_count(db, category, selection, conditions):
         stmt = stmt.where(getattr(FoiRequest, category) == selection)
 
     result = db.execute(stmt).scalar()
-    print(stmt)
     return result
 
 
@@ -485,7 +487,6 @@ def query_stats(db, category, selection, ascending=None):
     other_or_no_reason = refusal_reason_request_count(
         db, category, selection, (((FoiRequest.refusal_reason == "") & (FoiRequest.resolution == "refused")))
     )
-    print(other_or_no_reason, refused)
     return {
         "foi_requests": foi_requests,
         "foi_requests_resolved": resolved,
@@ -518,13 +519,20 @@ def query_stats(db, category, selection, ascending=None):
                 selection,
                 (FoiRequest.refusal_reason.isnot(None))
                 & (FoiRequest.refusal_reason != "")
-                & (FoiRequest.resolution == "refused"),
+                & (FoiRequest.resolution == "refused")
+                & (FoiRequest.refusal_reason != "Gesetz nicht anwendbar"),
             ),
             refused,
         ),
         "no_law_applicable": gen_perc(
             refusal_reason_request_count(
-                db, category, selection, ((FoiRequest.refusal_reason.is_(None)) & (FoiRequest.resolution == "refused"))
+                db,
+                category,
+                selection,
+                (
+                    (FoiRequest.refusal_reason.is_(None) | (FoiRequest.refusal_reason == "Gesetz nicht anwendbar"))
+                    & (FoiRequest.resolution == "refused")
+                ),
             ),
             refused,
         ),
