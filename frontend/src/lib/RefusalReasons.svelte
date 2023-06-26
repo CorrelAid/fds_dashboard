@@ -37,7 +37,7 @@
                 {#each $stats.refusal_reasons as item, i}
                     <tr>
                         <th>
-                            {i}
+                            {i+1}
                         </th>
                         <td>
                             {item.reason}
