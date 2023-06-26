@@ -23,8 +23,7 @@ export function formatAsPercent(num,places=2) {
   export function formatGermanDate(date) {
     const options = {
       year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
+      month: 'long'
     };
   
     const formattedDate = date.toLocaleString('de-DE', options);
