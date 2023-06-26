@@ -5,16 +5,16 @@
   import { campaign_starts } from "./stores/campaign_starts.js";
   import Filter from "./lib/Filter.svelte";
 
-  import A from "./lib/A.svelte";
-  import B1 from "./lib/B1.svelte";
-  import B2 from "./lib/B2.svelte";
-  import B3 from "./lib/B3.svelte";
-  import C1 from "./lib/C1.svelte";
-  import C2 from "./lib/C2.svelte";
-  import D from "./lib/D.svelte";
-  import E1 from "./lib/E1.svelte";
-  import E2 from "./lib/E2.svelte";
-  import E3 from "./lib/E3.svelte";
+  import LineRequests from "./lib/LineRequests.svelte";
+  import DonutResolution from "./lib/DonutResolution.svelte";
+  import Status from "./lib/Status.svelte";
+  import ReactionTime from "./lib/ReactionTime.svelte";
+  import Costs from "./lib/Costs.svelte";
+  import RefusalReasons from "./lib/RefusalReasons.svelte";
+  import RankingPublicBodies from "./lib/RankingPublicBodies.svelte";
+  import RankingJurisdictions from "./lib/RankingJurisdictions.svelte";
+  import RankingCampaigns from "./lib/RankingCampaigns.svelte";
+
 </script>
 
 <!-- Before rendering components, subscribe to store (make api call) and check if data is loaded -->
@@ -33,30 +33,30 @@
     <!-- A -->
     <div class="row">
       <div class="col p-3">
-        <A />
+        <LineRequests />
       </div>
     </div>
     <!-- B -->
     <div class="row">
       <div class="col-lg-7 p-3">
-        <B1 />
+        <DonutResolution />
       </div>
       <div class="col-lg-5 p-3">
-        <C1 />
+        <ReactionTime />
       </div>
     </div>
     <!-- C -->
     <div class="row">
       <div class="col-lg-7 p-3">
-        <B2 />
+        <Status />
       </div>
       <div class="col-lg-5 p-3">
-        <C2 />
+        <Costs />
       </div>
     </div>
     <div class="row">
       <div class="col p-3">
-        <D />
+        <RefusalReasons />
       </div>
     </div>
   </div>
@@ -68,17 +68,17 @@
     </div>
     <div class="row">
       <div class="col p-3">
-        <E1 />
+        <RankingPublicBodies />
       </div>
     </div>
     <div class="row">
       <div class="col p-3">
-        <E2 />
+        <RankingJurisdictions />
       </div>
     </div>
     <div class="row">
       <div class="col p-3">
-        <E3 />
+        <RankingCampaigns />
       </div>
     </div>
   </div>

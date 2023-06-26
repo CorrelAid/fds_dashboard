@@ -501,7 +501,11 @@ def resolved_time(db, category, selection):
 def refusal_reasons(db, category, selection):
     stmt = (
         select(FoiRequest.refusal_reason, func.count().label("num"))
-        .where((FoiRequest.refusal_reason.isnot(None)) & (FoiRequest.refusal_reason != ""))
+        .where(
+            (FoiRequest.refusal_reason.isnot(None))
+            & (FoiRequest.refusal_reason != "")
+            & (FoiRequest.refusal_reason != "Gesetz nicht anwendbar")
+        )
         .group_by(FoiRequest.refusal_reason)
         .order_by(func.count().desc())
     )
@@ -533,6 +537,10 @@ def query_stats(db, category, selection, ascending=None):
     overdue_total = overdue_requests(db, category=category, selection=selection)
     asleep = proc_value_status(dist_status, "asleep")
     overdue_not_resolved = proc_value_status(dist_status, "overdue")
+    refused = refusal_reason_request_count(db, category, selection, (FoiRequest.resolution == "refused"))
+    other_or_no_reason = refusal_reason_request_count(
+        db, category, selection, (((FoiRequest.refusal_reason == "") & (FoiRequest.resolution == "refused")))
+    )
     return {
         "foi_requests": foi_requests,
         "foi_requests_resolved": resolved,
@@ -559,10 +567,30 @@ def query_stats(db, category, selection, ascending=None):
         "max_costs": max_costs(db, category, selection, False),
         "min_costs": max_costs(db, category, selection, True),
         "avg_costs": avg_costs(db, category, selection),
-        "refusal_reasons_specified": refusal_reason_request_count(
-            db, category, selection, (FoiRequest.refusal_reason.isnot(None)) & (FoiRequest.refusal_reason != "")
+        "refusal_reasons_specified": gen_perc(
+            refusal_reason_request_count(
+                db,
+                category,
+                selection,
+                (FoiRequest.refusal_reason.isnot(None))
+                & (FoiRequest.refusal_reason != "")
+                & (FoiRequest.resolution == "refused")
+                & (FoiRequest.refusal_reason != "Gesetz nicht anwendbar"),
+            ),
+            refused,
         ),
-        "no_law_applicable": refusal_reason_request_count(db, category, selection, FoiRequest.refusal_reason.is_(None)),
-        "other_or_no_reason": refusal_reason_request_count(db, category, selection, FoiRequest.refusal_reason == ""),
+        "no_law_applicable": gen_perc(
+            refusal_reason_request_count(
+                db,
+                category,
+                selection,
+                (
+                    (FoiRequest.refusal_reason.is_(None) | (FoiRequest.refusal_reason == "Gesetz nicht anwendbar"))
+                    & (FoiRequest.resolution == "refused")
+                ),
+            ),
+            refused,
+        ),
+        "other_or_no_reason": gen_perc(other_or_no_reason, refused),
         "refusal_reasons": refusal_reasons(db, category, selection),
     }
