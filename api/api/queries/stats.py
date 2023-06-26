@@ -444,6 +444,33 @@ def resolved_time(db, category, selection):
     return result
 
 
+def refusal_reasons(db, category, selection):
+    stmt = (
+        select(FoiRequest.refusal_reason, func.count().label("num"))
+        .where((FoiRequest.refusal_reason.isnot(None)) & (FoiRequest.refusal_reason != ""))
+        .group_by(FoiRequest.refusal_reason)
+        .order_by(func.count().desc())
+    )
+    if category is not None and selection is not None:
+        stmt = stmt.where(getattr(FoiRequest, category) == selection)
+
+    stmt = stmt.limit(10)
+
+    result = db.execute(stmt).fetchall()
+    refusal_reasons_list = [{"count": row.num, "reason": row.refusal_reason} for row in result]
+    return refusal_reasons_list
+
+
+def refusal_reason_request_count(db, category, selection, conditions):
+    stmt = select(func.count()).where(conditions)
+
+    if category is not None and selection is not None:
+        stmt = stmt.where(getattr(FoiRequest, category) == selection)
+
+    result = db.execute(stmt).scalar()
+    return result
+
+
 def query_stats(db, category, selection, ascending=None):
     foi_requests = request_count(db, FoiRequest, category=category, selection=selection)
     dist_status = group_by_count(db, FoiRequest, FoiRequest.status, category=category, selection=selection)
@@ -477,4 +504,10 @@ def query_stats(db, category, selection, ascending=None):
         "percentage_withdrawn": withdrew_costs(db, category, selection),
         "max_costs": max_costs(db, category, selection),
         "avg_costs": avg_costs(db, category, selection),
+        "refusal_reasons_specified": refusal_reason_request_count(
+            db, category, selection, (FoiRequest.refusal_reason.isnot(None)) & (FoiRequest.refusal_reason != "")
+        ),
+        "no_law_applicable": refusal_reason_request_count(db, category, selection, FoiRequest.refusal_reason.is_(None)),
+        "other_or_no_reason": refusal_reason_request_count(db, category, selection, FoiRequest.refusal_reason == ""),
+        "refusal_reasons": refusal_reasons(db, category, selection),
     }

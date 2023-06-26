@@ -65,7 +65,8 @@
         height={300}
     />
     <br />
-    <p>
-        <a href={explore_url} target="_blank" class="btn btn-primary">Anfragen entdecken</a>
+    <p class="position-relative ps-1">
+        <a class="btn btn-primary start-0" href={explore_url} target="_blank">Anfragen entdecken</a>
+        <span class="position-absolute end-0 pt-3"><span class="h5 ">{$stats.users}</span> Nutzer*innen sind bei FragDenStaat registriert.</span>
     </p>
 </Card>

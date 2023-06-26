@@ -8,6 +8,7 @@
   import A from "./lib/A.svelte";
   import B1 from "./lib/B1.svelte";
   import B2 from "./lib/B2.svelte";
+  import B3 from "./lib/B3.svelte";
   import C1 from "./lib/C1.svelte";
   import C2 from "./lib/C2.svelte";
   import D from "./lib/D.svelte";

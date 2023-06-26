@@ -1,7 +1,6 @@
 <script>
     import { stats } from "../stores/stats.js";
     import Card from "./Card.svelte";
-    import Balken from "./charts/Balken.svelte";
     import { formatAsPercent } from "./helpers/formatting";
 </script>
 
