@@ -1,6 +1,6 @@
 <script>
   export let data;
-  import { formatAsPercent } from "../helpers/formatting";
+  import { formatAsPercent,roundNumber } from "../helpers/formatting";
   import ArrowDown from "../svg/ArrowDown.svelte";
   import ArrowUp from "../svg/ArrowUp.svelte";
   import { general_info,term } from "../../stores/general_info.js";
@@ -9,18 +9,20 @@
 
   export let values = {
     Anzahl: { ascending: false, selected: true },
-    Verspätungsquote: { ascending: true, selected: false },
+    Verspätet: { ascending: true, selected: false },
     Erfolgreich: { ascending: true, selected: false },
-    Erfolgsquote: { ascending: true, selected: false },
+    "Ø-Kosten": { ascending: true, selected: false },
+    Dauer: { ascending: true, selected: false },
   };
 
   export let type;
 
   const ar_cols = {
     Anzahl: { arrow_col: "arrow-white" },
-    Verspätungsquote: { arrow_col: "arrow-blue" },
+    Verspätet: { arrow_col: "arrow-blue" },
     Erfolgreich: { arrow_col: "arrow-blue" },
-    Erfolgsquote: { arrow_col: "arrow-blue" },
+    "Ø-Kosten": { arrow_col: "arrow-blue" },
+    Dauer: { arrow_col: "arrow-blue" },
   };
 
   const arrow_size = 20;
@@ -29,9 +31,10 @@
     { name: "#" },
     { name: "Name" },
     { name: "Anzahl", descending_only: true },
-    { name: "Verspätungsquote" },
+    { name: "Verspätet" },
     { name: "Erfolgreich" },
-    { name: "Erfolgsquote" },
+    { name: "Ø-Kosten" },
+    { name: "Dauer" },
   ];
 
   function handleClick(name, item) {
@@ -129,8 +132,9 @@
           >
           <td>{row.number}</td>
           <td>{formatAsPercent(row.overdue_rate)}</td>
-          <td>{row.successful}</td>
           <td>{formatAsPercent(row.success_rate)}</td>
+          <td>{roundNumber(row.avg_cost, 2)}€</td>
+          <td>{roundNumber(row.avg_time, 0)} Tage</td>
         </tr>
       {/each}
     </tbody>

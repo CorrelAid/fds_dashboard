@@ -14,6 +14,7 @@
     export let unit;
     export let name;
     export let data;
+    export let decimal_Places;
     $: if (data) {
         data_ = [
             [
@@ -36,10 +37,10 @@
             tooltip: {
                 trigger: "axis",
                 show: true,
-                formatter: `Minimale ${name}: <strong>${roundNumber(data_[0][0], 2)}</strong> ${unit} <br/> 
-                Median ${name}: <strong>${roundNumber(data_[0][2], 2)}</strong> ${unit} <br/>
+                formatter: `Minimale ${name}: <strong>${roundNumber(data_[0][0], decimal_Places)}</strong> ${unit} <br/> 
+                Median ${name}: <strong>${roundNumber(data_[0][2], decimal_Places)}</strong> ${unit} <br/>
                 Durchschnittliche ${name}: <strong>${roundNumber(average, 2)}</strong> ${unit} <br/>
-                Maximale ${name}: <strong>${roundNumber(data_[0][4], 2)}</strong> ${unit}`,
+                Maximale ${name}: <strong>${roundNumber(data_[0][4], decimal_Places)}</strong> ${unit}`,
             },
             yAxis: {
                 type: "category",
@@ -81,6 +82,7 @@
                                 symbolSize: 0,
                                 label: {
                                     position: "left",
+                                    formatter: `${roundNumber(data.Min.value, decimal_Places)}`,
                                     fontStyle: "bold",
                                     fontFamilty: "inherit",
                                     fontSize: "16",
@@ -100,6 +102,7 @@
                                 label: {
                                     position: "right",
                                     fontStyle: "bold",
+                                    formatter: `${roundNumber(data.Max.value, decimal_Places)}`,
                                     fontFamilty: "inherit",
                                     fontSize: "16",
                                     color: "#001c5a",
@@ -116,6 +119,7 @@
                                 label: {
                                     position: "top",
                                     distance: 25,
+                                    formatter: `${roundNumber(data.Median, decimal_Places)}`,
                                     fontStyle: "bold",
                                     fontFamilty: "inherit",
                                     fontSize: "16",
@@ -123,22 +127,7 @@
                                     fontSize: 20,
                                 },
                             },
-                            {
-                                valueIndex: 2,
-                                type: "max",
-                                show: true,
-                                symbol: "circle",
-                                symbolSize: 0,
-                                label: {
-                                    position: "top",
-                                    distance: 25,
-                                    fontStyle: "bold",
-                                    fontFamilty: "inherit",
-                                    fontSize: "16",
-                                    color: "#001c5a",
-                                    fontSize: 20,
-                                },
-                            },
+                           
                             {
                                 name: "fixed x position",
                                 yAxis: 0,
