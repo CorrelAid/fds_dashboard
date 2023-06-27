@@ -46,22 +46,4 @@ npm install
 npm run dev
 ```
 
-### Notes
-There are 46074 total foi requests.
-
-
-res = 905+4160+13888+3743+4183+2331 = 29210
-res =="": 16864
-
-29210+16864 = 46074 --> total number of foi requests
-
-status = 792+4+55+294+14265 = 15410
-this equals foi_requests_not_resolved (whis is foi_requests - resolved, status==resolved is 30664) but not res==""
-
-15410+30664=46074 --> total number of foi requests
-
-
-select count(*) from foi_requests fr where resolution = '' and status = 'resolved' ==>> 1456
-
-30664- 29210=1454
 
