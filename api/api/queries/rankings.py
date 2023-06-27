@@ -138,7 +138,7 @@ def resolved_time(db, category):
 
 
 def ranking_public_body(db, selection: str, ascending: bool):
-    if ascending:
+    if ascending is True:
         ordering = asc
     else:
         ordering = desc
@@ -146,65 +146,34 @@ def ranking_public_body(db, selection: str, ascending: bool):
     avg_cost = avg_costs(db, "public_body_id")
     time = resolved_time(db, "public_body_id")
 
-    if selection in [
-        "Anzahl",
-        "Erfolgsquote",
-        "Verspätungsquote",
-        "Abgeschlossenenquote",
-        "Erfolgreich",
-        "Kosten",
-        "Dauer",
-    ]:
-        stmt = (
-            select(
-                PublicBody.name,
-                total_num.c.count.label("Anzahl"),
-                (cast(resolved.c.count, Float) / total_num.c.count * 100).label("Abgeschlossenenquote"),
-                late.c.count.label("Fristüberschreitungen"),
-                (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
-                cast(successful.c.count, Float).label("Erfolgreich"),
-                (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
-                avg_cost.c.average.label("Kosten"),
-                time.c.average.label("Dauer"),
-            )
-            .join(resolved, PublicBody.id == resolved.c.public_body_id)
-            .join(total_num, PublicBody.id == total_num.c.public_body_id)
-            .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
-            .join(late, PublicBody.id == late.c.public_body_id, isouter=True)
-            .join(avg_cost, avg_cost.c.public_body_id == PublicBody.id, isouter=True)
-            .join(time, time.c.public_body_id == PublicBody.id, isouter=True)
-            .where(total_num.c.public_body_id == resolved.c.public_body_id)
-            .where(total_num.c.count > 20)
-            .order_by(nullslast(ordering(selection)))
-            .limit(10)
+    if selection not in ["Abgeschlossenenquote", "Verspätungsquote", "Erfolgsquote", "Kosten", "Dauer"]:
+        selection = "Anzahl"
+    stmt = (
+        select(
+            PublicBody.name,
+            total_num.c.count.label("Anzahl"),
+            (cast(resolved.c.count, Float) / total_num.c.count * 100).label("Abgeschlossenenquote"),
+            late.c.count.label("Fristüberschreitungen"),
+            (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
+            cast(successful.c.count, Float).label("Erfolgreich"),
+            (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
+            avg_cost.c.average.label("Kosten"),
+            time.c.average.label("Dauer"),
         )
-    else:
-        stmt = (
-            select(
-                PublicBody.name,
-                total_num.c.count.label("Anzahl"),
-                (cast(resolved.c.count, Float) / total_num.c.count * 100).label("Abgeschlossenenquote"),
-                late.c.count.label("Fristüberschreitungen"),
-                (cast(late.c.count, Float) / total_num.c.count * 100).label("Verspätungsquote"),
-                successful.c.count.label("Erfolgreich"),
-                (cast(successful.c.count, Float) / total_num.c.count * 100).label("Erfolgsquote"),
-                avg_cost.c.average.label("Kosten"),
-                time.c.average.label("Dauer"),
-            )
-            .join(resolved, PublicBody.id == resolved.c.public_body_id)
-            .join(total_num, PublicBody.id == total_num.c.public_body_id)
-            .join(late, late.c.public_body_id == PublicBody.id, isouter=True)
-            .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
-            .join(avg_cost, avg_cost.c.public_body_id == PublicBody.id, isouter=True)
-            .join(time, time.c.public_body_id == PublicBody.id, isouter=True)
-            .where(total_num.c.public_body_id == resolved.c.public_body_id)
-            .where(total_num.c.count > 20)
-            .order_by(nullslast("Verspätungsquote"))
-            .limit(10)
-        )
-    print(stmt)
+        .join(resolved, PublicBody.id == resolved.c.public_body_id)
+        .join(total_num, PublicBody.id == total_num.c.public_body_id)
+        .join(successful, PublicBody.id == successful.c.public_body_id, isouter=True)
+        .join(late, PublicBody.id == late.c.public_body_id, isouter=True)
+        .join(avg_cost, avg_cost.c.public_body_id == PublicBody.id, isouter=True)
+        .join(time, time.c.public_body_id == PublicBody.id, isouter=True)
+        .where(total_num.c.public_body_id == resolved.c.public_body_id)
+        .where(total_num.c.count > 20)
+        .order_by(nullslast(ordering(selection)))
+        .limit(10)
+    )
+    print(f"SELECTION: {selection}")
+
     result = db.execute(stmt).fetchall()
-    print(stmt)
     return to_dct(result)
 
 
