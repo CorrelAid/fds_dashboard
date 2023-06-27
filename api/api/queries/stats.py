@@ -381,7 +381,7 @@ def time_function(db, input, function):
     elif function == "min":
         stmt = (
             select(getattr(input.c, "id"), getattr(input.c, "time"))
-            .where(func.extract("epoch", getattr(input.c, "time")) > 300)
+            .where(func.extract("epoch", getattr(input.c, "time")) > 240)
             # at least 5 minutes between first message and answer to filter manually added messages with (almost)
             # same timestamp
             .order_by(getattr(input.c, "time"))
