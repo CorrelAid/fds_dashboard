@@ -34,7 +34,7 @@ def group_by_count(db, table, column, category=None, selection=None):
 
 
 def fractional_days(delta):
-    return round(delta.total_seconds() / (24 * 60 * 60), 2)
+    return round(delta.total_seconds() / (24 * 60 * 60), 10)
 
 
 def gen_perc(value, total):

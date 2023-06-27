@@ -10,11 +10,12 @@
         "#B6DDF5",
         "#FDE9AE",
     ];
-    let data_
+    let data_;
     export let unit;
     export let name;
     export let data;
     export let decimal_Places;
+    export let type = "";
     $: if (data) {
         data_ = [
             [
@@ -28,7 +29,18 @@
     }
     let average = data.Average;
     export let height;
-
+    $: console.log(data);
+    function handleMin(value) {
+        if (type === "time") {
+            if (value < 1) {
+                return "<1";
+            } else {
+                return roundNumber(value, decimal_Places);
+            }
+        } else {
+            return roundNumber(value, decimal_Places);
+        }
+    }
 
     const gen_options = (data_) => {
         return {
@@ -36,10 +48,21 @@
             tooltip: {
                 trigger: "axis",
                 show: true,
-                formatter: `Minimale ${name}: <strong>${roundNumber(data_[0][0], decimal_Places)}</strong> ${unit} <br/> 
-                Median ${name}: <strong>${roundNumber(data_[0][2], decimal_Places)}</strong> ${unit} <br/>
-                Durchschnittliche ${name}: <strong>${roundNumber(average, 2)}</strong> ${unit} <br/>
-                Maximale ${name}: <strong>${roundNumber(data_[0][4], decimal_Places)}</strong> ${unit}`,
+                formatter: `Minimale ${name}: <strong>${handleMin(
+                    data_[0][0]
+                )}</strong> ${unit} <br/> 
+                Median ${name}: <strong>${roundNumber(
+                    data_[0][2],
+                    decimal_Places
+                )}</strong> ${unit} <br/>
+                Durchschnittliche ${name}: <strong>${roundNumber(
+                    average,
+                    2
+                )}</strong> ${unit} <br/>
+                Maximale ${name}: <strong>${roundNumber(
+                    data_[0][4],
+                    decimal_Places
+                )}</strong> ${unit}`,
             },
             yAxis: {
                 type: "category",
@@ -81,7 +104,7 @@
                                 symbolSize: 0,
                                 label: {
                                     position: "left",
-                                    formatter: `${roundNumber(data.Min.value, decimal_Places)}`,
+                                    formatter: `${handleMin(data.Min.value)}`,
                                     fontStyle: "bold",
                                     fontFamilty: "inherit",
                                     fontSize: "16",
@@ -101,7 +124,10 @@
                                 label: {
                                     position: "right",
                                     fontStyle: "bold",
-                                    formatter: `${roundNumber(data.Max.value, decimal_Places)}`,
+                                    formatter: `${roundNumber(
+                                        data.Max.value,
+                                        decimal_Places
+                                    )}`,
                                     fontFamilty: "inherit",
                                     fontSize: "16",
                                     color: "#001c5a",
@@ -118,7 +144,10 @@
                                 label: {
                                     position: "top",
                                     distance: 25,
-                                    formatter: `${roundNumber(data.Median, decimal_Places)}`,
+                                    formatter: `${roundNumber(
+                                        data.Median,
+                                        decimal_Places
+                                    )}`,
                                     fontStyle: "bold",
                                     fontFamilty: "inherit",
                                     fontSize: "16",
@@ -126,7 +155,7 @@
                                     fontSize: 20,
                                 },
                             },
-                           
+
                             {
                                 name: "fixed x position",
                                 yAxis: 0,
