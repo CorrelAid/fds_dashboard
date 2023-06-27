@@ -15,6 +15,26 @@
     export let height;
     export let centerNumber = undefined;
 
+
+    $: if (data) {
+        const nameColors = {
+            Erfolgreich: "#0047e1",
+            Zurückgezogen: "#FBD766",
+            Abgelehnt: "#FE4A49",
+            "Information nicht vorhanden": "#B6DDF5",
+            "Teilweise erfolgreich": "#61E294",
+            Unbekannt: "#FDE9AE",
+        };
+        for (let i = 0; i < data.length; i++) {
+            const name = data[i].name;
+            const color = nameColors[name];
+            data[i].itemStyle = {};
+            data[i].itemStyle.color = color;
+        }
+    }
+
+    $: console.log(data);
+
     $: sum = data.reduce((total, item) => total + item.value, 0);
 
     const gen_options = (data) => {
@@ -27,11 +47,11 @@
                     return `${params.name}: <strong>${params.value}</strong>`;
                 },
             },
-            dataset: {
-                // Provide a set of data.
-                dimensions: ["value", "name"],
-                source: data,
-            },
+            // dataset: {
+            //     // Provide a set of data.
+            //     dimensions: ["value", "name"],
+            //     source: data,
+            // },
             title: {
                 text: `Abgeschlossen: ${centerNumber}`,
                 show: true,
@@ -44,12 +64,11 @@
             },
             series: [
                 {
-                    color: colorPalette,
                     type: "pie",
+                    data : data,
                     // left: "-40%",
                     radius: ["55%", "78%"],
                     overflow: "breakAll",
-
                     avoidLabelOverlap: true,
                     label: {
                         show: true,
@@ -90,8 +109,8 @@
             ],
         };
     };
-
 </script>
+
 {#if data}
-<Chart options={gen_options(data)} {height} />
+    <Chart options={gen_options(data)} {height} />
 {/if}

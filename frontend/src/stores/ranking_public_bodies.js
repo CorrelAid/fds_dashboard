@@ -31,7 +31,6 @@ export const ranking_public_bodies = derived(values_public_bodies, ($values_publ
         }
         return (response.json())}
     ).then(function (data) {
-            
             const ranking = data
             set(ranking)
         })

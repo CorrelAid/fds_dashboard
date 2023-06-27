@@ -29,7 +29,6 @@
     let average = data.Average;
     export let height;
 
-    $: console.log(data_);
 
     const gen_options = (data_) => {
         return {
