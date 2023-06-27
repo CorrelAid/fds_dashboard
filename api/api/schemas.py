@@ -18,9 +18,7 @@ class Stats(BaseModel):
     overdue_percentage_not_resolved: float
     percentage_costs: float
     percentage_withdrawn: float
-    max_costs: dict
-    min_costs: dict
-    avg_costs: float
+    costs: List[dict]
     overdue_total: int
     overdue_rate: float
     initial_reaction_time: List[dict]

@@ -178,6 +178,16 @@ def withdrew_costs(db, category, selection):
     return result
 
 
+def costs(db, category, selection):
+    max = max_costs(db, category, selection, min=False)
+    min = max_costs(db, category, selection, min=True)
+    avg = avg_costs(db, category, selection)
+    med = med_costs(db, category, selection)
+
+    result = [{"Average": avg, "Median": med, "Min": min, "Max": max}]
+    return result
+
+
 def max_costs(db, category, selection, min: bool):
     stmt = select(FoiRequest.id, cast(FoiRequest.costs, Float)).where(FoiRequest.costs != 0)
 
@@ -190,9 +200,9 @@ def max_costs(db, category, selection, min: bool):
         stmt = stmt.order_by(FoiRequest.costs).limit(1)
     result = db.execute(stmt).fetchone()
     if result is None:
-        result = {"cost": 0, "id": None}
+        result = {"value": 0, "id": None}
     else:
-        result = {"cost": result[1], "id": result[0]}
+        result = {"value": result[1], "id": result[0]}
 
     return result
 
@@ -204,6 +214,17 @@ def avg_costs(db, category, selection):
 
     result = db.execute(stmt).scalar()
 
+    if result is None:
+        result = 0
+    return result
+
+
+def med_costs(db, category, selection):
+    stmt = select(func.percentile_cont(0.5).within_group(FoiRequest.costs)).where(FoiRequest.costs != 0)
+    if category is not None and selection is not None:
+        stmt = stmt.where(getattr(FoiRequest, category) == selection)
+
+    result = db.execute(stmt).scalar()
     if result is None:
         result = 0
     return result
@@ -386,7 +407,6 @@ def time_function(db, input, function):
         query = select(func.percentile_cont(0.5).within_group(input.c.time))
 
         result = db.execute(query).fetchone()
-        print(f"EEEEEEEEEEEEEEEEEERGEBNIS: {result}")
         if result[0] is None:
             result = None
         else:
@@ -591,9 +611,7 @@ def query_stats(db, category, selection, ascending=None):
         "resolved_time": resolved_time(db, category=category, selection=selection),
         "percentage_costs": percentage_costs(db, category=category, selection=selection),
         "percentage_withdrawn": withdrew_costs(db, category, selection),
-        "max_costs": max_costs(db, category, selection, False),
-        "min_costs": max_costs(db, category, selection, True),
-        "avg_costs": avg_costs(db, category, selection),
+        "costs": costs(db, category, selection),
         "refusal_reasons_specified": gen_perc(
             refusal_reason_request_count(
                 db,
