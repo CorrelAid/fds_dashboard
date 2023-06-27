@@ -189,7 +189,7 @@ def costs(db, category, selection):
 
 
 def max_costs(db, category, selection, min: bool):
-    stmt = select(FoiRequest.id, cast(FoiRequest.costs, Float)).where(FoiRequest.costs != 0)
+    stmt = select(FoiRequest.id, cast(FoiRequest.costs, Float)).where(FoiRequest.costs >= 0.01)
 
     if category is not None and selection is not None:
         stmt = stmt.where(getattr(FoiRequest, category) == selection)
