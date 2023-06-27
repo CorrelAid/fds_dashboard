@@ -1,6 +1,6 @@
 <script>
     import Chart from "./Chart.svelte";
-    import { formatAsPercent, formatCosts } from "../helpers/formatting";
+    import { roundNumber } from "../helpers/formatting";
 
     const colorPalette = [
         "#0047e1",
@@ -10,23 +10,36 @@
         "#B6DDF5",
         "#FDE9AE",
     ];
-
-    export let data = [[655, 940, 940, 940, 1175]];
-    export let average = 950
+    let data_
+    export let unit;
+    export let name;
+    export let data;
+    $: if (data) {
+        data_ = [
+            [
+                data.Min.value,
+                data.Median,
+                data.Median,
+                data.Median,
+                data.Max.value,
+            ],
+        ];
+    }
+    let average = data.Average;
     export let height;
 
-    $: console.log(data);
+    $: console.log(data_);
 
-    const gen_options = (data) => {
+    const gen_options = (data_) => {
         return {
             animation: false,
             tooltip: {
                 trigger: "axis",
                 show: true,
-                formatter: `Schnellste Abschlussdauer: <strong>${data[0][0]}</strong> Tage <br/> 
-                Median Abschlussdauer: <strong>${data[0][2]}</strong> Tage <br/>
-                Durchschnittliche Abschlussdauer: <strong>${average}</strong> Tage <br/>
-                Langsamste Abschlussdauer: <strong>${data[0][4]}</strong> Tage`,
+                formatter: `Minimale ${name}: <strong>${roundNumber(data_[0][0], 2)}</strong> ${unit} <br/> 
+                Median ${name}: <strong>${roundNumber(data_[0][2], 2)}</strong> ${unit} <br/>
+                Durchschnittliche ${name}: <strong>${roundNumber(average, 2)}</strong> ${unit} <br/>
+                Maximale ${name}: <strong>${roundNumber(data_[0][4], 2)}</strong> ${unit}`,
             },
             yAxis: {
                 type: "category",
@@ -35,22 +48,20 @@
             xAxis: {
                 type: "value",
                 show: true,
-                min: function (value) {
-                    return value.min - 20;
-                },
-                name: "Abschlussdauer in Tagen",
+                min: 0,
+                name: `${name} in ${unit}`,
                 nameLocation: "center",
                 nameGap: 35,
                 nameTextStyle: {
                     fontSize: 13,
                 },
             },
-            grid: { left: "15%", bottom: "27%", right: "15%", top: "5%" },
+            grid: { left: "15%", bottom: "27%", right: "19%", top: "5%" },
             series: [
                 {
                     type: "boxplot",
                     layout: "horizontal",
-                    data: data,
+                    data: data_,
                     dimensions: ["minimum", null, "median", null, "maximum"],
                     color: "#0047e1",
                     boxWidth: ["10%", "28%"],
@@ -154,6 +165,6 @@
     };
 </script>
 
-{#if data}
-    <Chart options={gen_options(data)} {height} />
+{#if data_}
+    <Chart options={gen_options(data_)} {height} />
 {/if}

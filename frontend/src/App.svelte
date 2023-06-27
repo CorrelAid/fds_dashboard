@@ -47,10 +47,10 @@
     </div>
     <!-- C -->
     <div class="row">
-      <div class="col-lg-7 p-3">
+      <div class="col-lg-6 p-3">
         <Status />
       </div>
-      <div class="col-lg-5 p-3">
+      <div class="col-lg-6 p-3">
         <Costs />
       </div>
     </div>
