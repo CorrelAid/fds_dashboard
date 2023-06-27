@@ -8,7 +8,7 @@
     <ul>
         <li class="mb-2">
             <span class="h5">{$stats.foi_requests_not_resolved}</span> Anfragen laufen
-            im Moment.
+            aktuell
         </li>
         <li class="mb-2">
             <span class="h5"
@@ -17,11 +17,11 @@
             der laufenden und
             <span class="h5"
                 >{formatAsPercent($stats.asleep_percentage_total)}</span
-            > aller Anfragen sind eingeschlafen.
+            > aller Anfragen sind eingeschlafen
         </li>
         <li class="mb-2">
             <span class="h5">{formatAsPercent($stats.overdue_percentage_not_resolved)}</span> der
-            laufenden Anfragen sind verspätet.
+            laufenden Anfragen sind verspätet
         </li>
     </ul>
 </Card>

@@ -16,13 +16,13 @@
             <span class="h5"
                 >{formatAsPercent($stats.percentage_costs)}</span
             >
-            der Anfragen kosten etwas.
+            der Anfragen waren kostenpflichtig
         </li>
         {#if $stats.percentage_costs != 0}
         <li class="mb-3">
             <span class="h5"
                 >{formatAsPercent($stats.percentage_withdrawn)}</span
-            > der Nutzer*innen zogen daraufhin ihre Anfrage zurück.
+            > der Nutzer*innen zogen aufgrund der Kosten ihre Anfrage zurück
         </li>
         {/if}
     </ul>

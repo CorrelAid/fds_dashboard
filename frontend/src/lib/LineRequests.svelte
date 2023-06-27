@@ -67,6 +67,6 @@
     <br />
     <p class="position-relative ps-1">
         <a class="btn btn-primary start-0" href={explore_url} target="_blank">Anfragen entdecken</a>
-        <span class="position-absolute end-0 pt-3"><span class="h5 ">{$stats.users}</span> Nutzer*innen sind bei FragDenStaat registriert.</span>
+        <span class="position-absolute end-0 pt-3"><span class="h5 ">{$stats.users}</span> registrierte Nutzer*innen haben Anfragen gestellt</span>
     </p>
 </Card>

@@ -8,23 +8,23 @@
     <ul>
         <li class="mb-3">
             <span class="h5">{formatAsPercent($stats.other_or_no_reason)}</span>
-            der abgelehnten Anfragen fehlt ein Ablehnungsgrund oder es liegt ein
-            anderer, unbekannter Grund vor.
+            der abgelehnten Anfragen fehlt eine Begründung oder es liegt ein
+            anderer, unbekannter Ablehnungsgrund vor
         </li>
         <li class="mb-3">
             <span class="h5"
                 >{formatAsPercent($stats.refusal_reasons_specified)}</span
-            > der abgelehnten Anfragen wurden begründet.
+            > der abgelehnten Anfragen wurden begründet
         </li>
 
         <li class="mb-5">
             <span class="h5">{formatAsPercent($stats.no_law_applicable)}</span> der
-            abgelehnten Anfragen wurden abgelehnt, weil das angegebene Gesetz nicht
-            anwendbar ist.
+            abgelehnten Anfragen wurden abgewiesen, weil das angegebene Gesetz nicht
+            anwendbar ist
         </li>
     </ul>
-    <h5 class="mb-3">Häufigste Ablehnungsgründe:</h5>
     {#if $stats.refusal_reasons.length != 0}
+    <h5 class="mb-3">Häufigste Ablehnungsgründe:</h5>
         <table class="table">
             <thead class="bigger">
                 <tr>
