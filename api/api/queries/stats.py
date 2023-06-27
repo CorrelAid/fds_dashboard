@@ -1,6 +1,5 @@
-from sqlalchemy import func
 from api.models import FoiRequest, Message, PublicBody
-from sqlalchemy import select, cast, Float, desc
+from sqlalchemy import select, cast, Float, desc, func
 
 
 def request_count(db, table, category=None, selection=None):
@@ -357,9 +356,17 @@ def initial_reaction_time(db, category, selection):
         .subquery()
     )
     avg = time_function(db, combine, "avg")
+    median = time_function(db, combine, "median")
     min = time_function(db, combine, "min")
     max = time_function(db, combine, "max")
-    result = [{"Average": avg, "Min": {"value": min[1], "id": min[0]}, "Max": {"value": max[1], "id": max[0]}}]
+    result = [
+        {
+            "Average": avg,
+            "Median": median,
+            "Min": {"value": min[1], "id": min[0]},
+            "Max": {"value": max[1], "id": max[0]},
+        }
+    ]
     return result
 
 
@@ -368,8 +375,20 @@ def time_function(db, input, function):
         stmt = select(func.avg(getattr(input.c, "time")).label("Avg"))
 
         result = db.execute(stmt).fetchone()
-        if result is None:
-            result = 0
+        print(f"AVERAGE: {result}")
+        if result[0] is None:
+            result = None
+        else:
+            result = fractional_days(result[0])
+        return result
+
+    elif function == "median":
+        query = select(func.percentile_cont(0.5).within_group(input.c.time))
+
+        result = db.execute(query).fetchone()
+        print(f"EEEEEEEEEEEEEEEEEERGEBNIS: {result}")
+        if result[0] is None:
+            result = None
         else:
             result = fractional_days(result[0])
         return result
@@ -391,8 +410,8 @@ def time_function(db, input, function):
     result = db.execute(stmt).fetchone()
     if result is None:
         result1 = []
-        result1[0] = None
-        result1[1] = 0
+        result1.append(None)
+        result1.append(None)
     else:
         result1 = []
         result1.append(result[0])
@@ -492,9 +511,17 @@ def resolved_time_prep(db, category, selection):
 def resolved_time(db, category, selection):
     combine = resolved_time_prep(db, category, selection)
     avg = time_function(db, combine, "avg")
+    median = time_function(db, combine, "median")
     min = time_function(db, combine, "min")
     max = time_function(db, combine, "max")
-    result = [{"Average": avg, "Min": {"id": min[0], "value": min[1]}, "Max": {"id": max[0], "value": max[1]}}]
+    result = [
+        {
+            "Average": avg,
+            "Median": median,
+            "Min": {"id": min[0], "value": min[1]},
+            "Max": {"id": max[0], "value": max[1]},
+        }
+    ]
     return result
 
 
