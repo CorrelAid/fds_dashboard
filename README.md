@@ -1,11 +1,10 @@
 ## Dev Setup
-We are rebuilding the containers without using the cache to make sure they are using the most recent code/data. You need to have docker installed on your system: https://docs.docker.com/get-docker/
 
 ### Working on API
 
 1. Start the database containers(Redis and Postgres).
 ```
-docker compose -f db.yml down --volumes
+(docker compose -f db.yml down --volumes)
 docker compose -f db.yml build --no-cache
 docker compose -f db.yml  up --force-recreate -d
 ```
